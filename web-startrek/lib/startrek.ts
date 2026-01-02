@@ -364,18 +364,50 @@ export class StarTrekGame {
     }
   }
 
-  private commandNav() {
-    this.prompt("COURSE (1-9)", (cStr) => {
-      const course = parseFloat(cStr);
-      if (isNaN(course) || course < 1 || course >= 9) {
-        this.print("   LT. SULU REPORTS, 'INCORRECT COURSE DATA, SIR!'");
-        return;
+  public getSectorData() {
+      return {
+          x: this.sectX,
+          y: this.sectY,
+          klingons: [...this.localKlingons],
+          starbases: [...this.localStarbases],
+          stars: [...this.localStars]
+      };
+  }
+
+  public getDamageReport() {
+      return this.damage.map((val, i) => ({ name: this.damageNames[i], value: val }));
+  }
+
+  public getLRSData() {
+    if (this.damage[2] < 0) return null;
+    const data = [];
+    for (let y = this.quadY - 1; y <= this.quadY + 1; y++) {
+      const row = [];
+      for (let x = this.quadX - 1; x <= this.quadX + 1; x++) {
+        if (x >= 0 && x <= 7 && y >= 0 && y <= 7) {
+            this.knownGalaxy[x][y] = this.galaxy[x][y];
+            row.push(this.galaxy[x][y]);
+        } else {
+            row.push(-1); // Out of bounds
+        }
       }
-      
-      const maxWarp = this.damage[0] < 0 ? 0.2 : 8;
-      this.prompt(`WARP FACTOR (0-${maxWarp})`, (wStr) => {
-        let warp = parseFloat(wStr);
+      data.push(row);
+    }
+    return data;
+  }
+
+  public getGalaxyMap() {
+    return this.knownGalaxy.map(col => [...col]);
+  }
+
+  public executeNav(course: number, warp: number) {
+        if (isNaN(course) || course < 1 || course >= 9) {
+            this.print("   LT. SULU REPORTS, 'INCORRECT COURSE DATA, SIR!'");
+            return;
+        }
         if (isNaN(warp) || warp < 0) return;
+        
+        const maxWarp = this.damage[0] < 0 ? 0.2 : 8;
         if (this.damage[0] < 0 && warp > 0.2) {
            this.print("WARP ENGINES ARE DAMAGED. MAXIUM SPEED = WARP 0.2");
            return;
@@ -386,62 +418,21 @@ export class StarTrekGame {
              return;
         }
 
-        // Energy Calculation
-        const dist = Math.floor(warp * 8 + 0.5); // BASIC uses logic N = INT(W1*8+.5)
-        const energyCost = Math.floor(dist * dist * (dist / 8.0) + 10); // Simplified approximation of BASIC cost?? 
-        // BASIC Line 2490: N=INT(W1*8+.5). IF E-N>=0... 
-        // Wait, N is distance in tenths of quadrants? Or sector steps?
-        // BASIC move logic is complex.
-        // Let's use simpler vector math but respect the game's scale.
-        // Course 1=Right(East), 3=Up(North), 5=Left(West), 7=Down(South).
-        // Angle in radians:
-        // 1 -> 0
-        // 2 -> -PI/4 (Up-Right) -- Wait, standard unit circle is 0=Right, PI/2=Up.
-        // 3 -> -PI/2 (Up)
-        // This is clockwise starting from East = 1.
-        // (Course - 1) * (-PI/4) ?
-        // 1 -> 0
-        // 2 -> -0.78 (SE?) No, 2 is Up-Right usually? 
-        // Let's check BASIC:
-        // C(1,1)=0, C(1,2)=1. Wait.
-        // Lines 530-600 define C array vectors.
-        // C(1,2)=1 (X=0, Y=1 -> Down?). BASIC coordinates: Y increases downwards? Usually.
-        // If 3 is North, 7 is South.
-        // 1 is East (X+), 5 is West (X-).
-        
-        // Let's just implement standard trigonometry mapped to the input.
-        // 1=East (0 deg), increasing clockwise (like a compass but starting East?).
-        // Actually, let's assume standard compass: 3=North, 1=East? 
-        // Let's stick to the code.
-        // X1 = C(C1,1)... 
-        // Let's use simple math:
-        // Angle = (1 - Course) * 45 degrees.
-        // 1 -> 0 deg (East)
-        // 2 -> -45 deg (North East)
-        // 3 -> -90 deg (North)
-        // ...
-        
         const angle = (1 - course) * (Math.PI / 4);
         const dx = Math.cos(angle);
-        const dy = Math.sin(angle); // Y is down in screen coords usually, but let's check.
-        // If 3 is North, Y should decrease. sin(-90) = -1. Correct.
+        const dy = Math.sin(angle); 
         
-        const energyRequired = Math.floor(warp * warp * warp * 10 + 10); // Heuristic
+        const energyRequired = Math.floor(warp * warp * warp * 10 + 10); 
         if (this.energy < energyRequired) {
              this.print("ENGINEERING REPORTS   'INSUFFICIENT ENERGY AVAILABLE");
              this.print(`                       FOR MANEUVERING AT WARP ${warp}!'`);
              return;
         }
         
-        // Move Step by Step
         this.energy -= energyRequired;
         this.klingonsMoveAndFire();
-        this.repairSystem(warp); // Repair happens during Warp
+        this.repairSystem(warp); 
         
-        // Actual Move
-        // Total distance in Quadrants = Warp * (Time step?).
-        // In BASIC: T = T + 1 (if crossing quadrant) or T + 0.1 * Warp?
-        // Line 3430: T8=1. IF W1<1 THEN T8=.1*INT(10*W1). T=T+T8.
         const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
         this.stardate += timeSpent;
         if (this.stardate > this.stardateEnd) {
@@ -449,52 +440,32 @@ export class StarTrekGame {
             return;
         }
 
-        // Move calculation
-        // Position is (QuadX, QuadY) + (SectX, SectY)/8.
-        // GlobalX = QuadX * 8 + SectX
-        // GlobalY = QuadY * 8 + SectY
         let globalX = this.quadX * 8 + this.sectX;
         let globalY = this.quadY * 8 + this.sectY;
         
-        const moveDist = warp * 8 * timeSpent; // Distance in sectors? 
-        // Actually BASIC moves N steps. N = W1 * 8. 
-        // So Warps are essentially "Quadrants per Time Unit" approx.
+        const moveDist = warp * 8 * timeSpent; 
         
         const steps = Math.floor(warp * 8);
         const stepX = dx * moveDist / steps;
         const stepY = dy * moveDist / steps;
         
-        let hitEdge = false;
-        
         for (let i = 0; i < steps; i++) {
             globalX += stepX;
             globalY += stepY;
-            
-            // Check for star collision (only in current quadrant)
-            // But we are moving potentially across quadrants.
-            // Simplified: Just update position. collision check is hard across quadrants without generating them.
-            // BASIC only checks collision in current quadrant?
-            // Line 3170: Loop N. Update S1, S2. If S1<1... GOTO 3500 (New Quadrant).
-            // Line 3240: Check for Star collision in CURRENT quadrant logic.
-            
-            // We'll just calculate final position for simplicity, stopping at quadrant boundaries if needed or updating quad.
         }
         
-        // Calculate final Quad/Sect
         const finalQX = Math.floor(globalX / 8);
         const finalQY = Math.floor(globalY / 8);
         const finalSX = Math.floor(globalX % 8);
         const finalSY = Math.floor(globalY % 8);
         
         if (finalQX < 0 || finalQX > 7 || finalQY < 0 || finalQY > 7) {
-            // Hit galactic barrier
              this.print("LT. UHURA REPORTS MESSAGE FROM STARFLEET COMMAND:");
              this.print("  'PERMISSION TO ATTEMPT CROSSING OF GALACTIC PERIMETER");
              this.print("  IS HEREBY *DENIED*.  SHUT DOWN YOUR ENGINES.'");
-             // Bounce back? Or just stop at edge.
              this.quadX = Math.max(0, Math.min(7, finalQX));
              this.quadY = Math.max(0, Math.min(7, finalQY));
-             this.sectX = 0; this.sectY = 0; // Reset sector
+             this.sectX = 0; this.sectY = 0; 
         } else {
              const changedQuad = (finalQX !== this.quadX || finalQY !== this.quadY);
              this.quadX = finalQX;
@@ -508,8 +479,67 @@ export class StarTrekGame {
                  this.shortRangeScan();
              }
         }
+  }
+
+  private commandNav() {
+    this.prompt("COURSE (1-9)", (cStr) => {
+      const course = parseFloat(cStr);
+      const maxWarp = this.damage[0] < 0 ? 0.2 : 8;
+      this.prompt(`WARP FACTOR (0-${maxWarp})`, (wStr) => {
+        const warp = parseFloat(wStr);
+        this.executeNav(course, warp);
       });
     });
+  }
+
+  public executePhasers(amt: number) {
+    if (this.damage[3] < 0) {
+        this.print("PHASERS INOPERATIVE");
+        return;
+    }
+    if (this.localKlingons.length === 0) {
+        this.print("SCIENCE OFFICER SPOCK REPORTS  'SENSORS SHOW NO ENEMY SHIPS");
+        this.print("                                IN THIS QUADRANT'");
+        return;
+    }
+    
+    if (isNaN(amt) || amt <= 0) return;
+    if (amt > this.energy) {
+        this.print("ENERGY AVAILABLE EXCEEDED.");
+        return;
+    }
+    
+    this.energy -= amt;
+    this.print(`PHASERS FIRED: ${amt} UNITS.`);
+    
+    const perKlingon = amt / this.localKlingons.length;
+    
+    for (let i = this.localKlingons.length - 1; i >= 0; i--) {
+        const k = this.localKlingons[i];
+        const dist = Math.sqrt(Math.pow(k.x - this.sectX, 2) + Math.pow(k.y - this.sectY, 2));
+        let damage = Math.floor((perKlingon / dist) * (Math.random() + 2));
+        
+        if (damage > 0.15 * k.energy) {
+             this.print(`${damage} UNIT HIT ON KLINGON AT SECTOR ${k.x+1},${k.y+1}`);
+             k.energy -= damage;
+             if (k.energy <= 0) {
+                 this.print("*** KLINGON DESTROYED ***");
+                 this.localKlingons.splice(i, 1);
+                 this.totalKlingons--;
+                 this.galaxy[this.quadX][this.quadY] -= 100;
+                 if (this.totalKlingons <= 0) {
+                     this.winGame();
+                     return;
+                 }
+             } else {
+                 this.print(`   (SENSORS SHOW ${Math.floor(k.energy)} UNITS REMAINING)`);
+             }
+        } else {
+            this.print(`SENSORS SHOW NO DAMAGE TO ENEMY AT ${k.x+1},${k.y+1}`);
+        }
+    }
+    
+    this.klingonsMoveAndFire();
   }
 
   private commandPhasers() {
@@ -525,49 +555,83 @@ export class StarTrekGame {
     
     this.print(`PHASERS LOCKED ON TARGET;  ENERGY AVAILABLE = ${this.energy}`);
     this.prompt("NUMBER OF UNITS TO FIRE", (amtStr) => {
-        let amt = parseInt(amtStr);
-        if (isNaN(amt) || amt <= 0) return;
-        if (amt > this.energy) {
-            this.print("ENERGY AVAILABLE EXCEEDED.");
-            return;
-        }
-        
-        this.energy -= amt;
-        
-        // Distribute hit among klingons
-        // BASIC splits amount by number of klingons? No.
-        // Line 4450: H1 = INT(X/K3). Loop per klingon.
-        // Hit = (H1 / Distance) * (RND + 2).
-        
-        const perKlingon = amt / this.localKlingons.length;
-        
-        for (let i = this.localKlingons.length - 1; i >= 0; i--) {
-            const k = this.localKlingons[i];
-            const dist = Math.sqrt(Math.pow(k.x - this.sectX, 2) + Math.pow(k.y - this.sectY, 2));
-            let damage = Math.floor((perKlingon / dist) * (Math.random() + 2));
-            
-            if (damage > 0.15 * k.energy) {
-                 this.print(`${damage} UNIT HIT ON KLINGON AT SECTOR ${k.x+1},${k.y+1}`);
-                 k.energy -= damage;
-                 if (k.energy <= 0) {
-                     this.print("*** KLINGON DESTROYED ***");
-                     this.localKlingons.splice(i, 1);
-                     this.totalKlingons--;
-                     this.galaxy[this.quadX][this.quadY] -= 100;
-                     if (this.totalKlingons <= 0) {
-                         this.winGame();
-                         return;
-                     }
-                 } else {
-                     this.print(`   (SENSORS SHOW ${Math.floor(k.energy)} UNITS REMAINING)`);
-                 }
-            } else {
-                this.print(`SENSORS SHOW NO DAMAGE TO ENEMY AT ${k.x+1},${k.y+1}`);
-            }
-        }
-        
-        this.klingonsMoveAndFire();
+        const amt = parseInt(amtStr);
+        this.executePhasers(amt);
     });
+  }
+
+  public executeTorpedo(course: number) {
+     if (this.torpedoes <= 0) {
+         this.print("ALL PHOTON TORPEDOES EXPENDED");
+         return;
+     }
+     if (this.damage[4] < 0) {
+         this.print("PHOTON TUBES ARE NOT OPERATIONAL");
+         return;
+     }
+     if (isNaN(course) || course < 1 || course >= 9) {
+             this.print("ENSIGN CHEKOV REPORTS,  'INCORRECT COURSE DATA, SIR!'");
+             return;
+     }
+        
+     this.energy -= 2;
+     this.torpedoes--;
+        
+     const angle = (1 - course) * (Math.PI / 4);
+     const dx = Math.cos(angle);
+     const dy = Math.sin(angle);
+        
+     this.print("TORPEDO TRACK:");
+        
+     let tx = this.sectX;
+     let ty = this.sectY;
+     let hit = false;
+        
+     for (let step = 0; step < 10; step++) { 
+            tx += dx;
+            ty += dy;
+            const rx = Math.round(tx);
+            const ry = Math.round(ty);
+            
+            if (rx < 0 || rx > 7 || ry < 0 || ry > 7) {
+                this.print("TORPEDO MISSED");
+                break;
+            }
+            
+            this.print(`               ${rx+1},${ry+1}`);
+            
+            const kIdx = this.localKlingons.findIndex(k => k.x === rx && k.y === ry);
+            if (kIdx !== -1) {
+                this.print("*** KLINGON DESTROYED ***");
+                this.localKlingons.splice(kIdx, 1);
+                this.totalKlingons--;
+                this.galaxy[this.quadX][this.quadY] -= 100;
+                hit = true;
+                if (this.totalKlingons <= 0) this.winGame();
+                break;
+            }
+            
+            if (this.localStars.some(s => s.x === rx && s.y === ry)) {
+                this.print(`STAR AT ${rx+1},${ry+1} ABSORBED TORPEDO ENERGY.`);
+                hit = true;
+                break;
+            }
+            
+            const bIdx = this.localStarbases.findIndex(b => b.x === rx && b.y === ry);
+            if (bIdx !== -1) {
+                this.print("*** STARBASE DESTROYED ***");
+                this.localStarbases.splice(bIdx, 1);
+                this.totalStarbases--;
+                this.galaxy[this.quadX][this.quadY] -= 10;
+                this.print("THAT DOES IT, CAPTAIN!!  YOU ARE HEREBY RELIEVED OF COMMAND");
+                this.print("AND SENTENCED TO 99 STARDATES AT HARD LABOR ON CYGNUS 12!!");
+                this.state = 'ENDED';
+                hit = true;
+                break;
+            }
+     }
+        
+     this.klingonsMoveAndFire();
   }
 
   private commandTorpedo() {
@@ -582,80 +646,30 @@ export class StarTrekGame {
      
      this.prompt("PHOTON TORPEDO COURSE (1-9)", (cStr) => {
         const course = parseFloat(cStr);
-        if (isNaN(course) || course < 1 || course >= 9) {
-             this.print("ENSIGN CHEKOV REPORTS,  'INCORRECT COURSE DATA, SIR!'");
-             return;
-        }
-        
-        this.energy -= 2;
-        this.torpedoes--;
-        
-        const angle = (1 - course) * (Math.PI / 4);
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle);
-        
-        this.print("TORPEDO TRACK:");
-        
-        let tx = this.sectX;
-        let ty = this.sectY;
-        
-        let hit = false;
-        
-        // Move torpedo
-        for (let step = 0; step < 10; step++) { // Range limit?
-            tx += dx;
-            ty += dy;
-            const rx = Math.round(tx);
-            const ry = Math.round(ty);
-            
-            if (rx < 0 || rx > 7 || ry < 0 || ry > 7) {
-                this.print("TORPEDO MISSED");
-                break;
-            }
-            
-            this.print(`               ${rx+1},${ry+1}`);
-            
-            // Check Hit
-            // Klingon?
-            const kIdx = this.localKlingons.findIndex(k => k.x === rx && k.y === ry);
-            if (kIdx !== -1) {
-                this.print("*** KLINGON DESTROYED ***");
-                this.localKlingons.splice(kIdx, 1);
-                this.totalKlingons--;
-                this.galaxy[this.quadX][this.quadY] -= 100;
-                hit = true;
-                if (this.totalKlingons <= 0) this.winGame();
-                break;
-            }
-            
-            // Star?
-            if (this.localStars.some(s => s.x === rx && s.y === ry)) {
-                this.print(`STAR AT ${rx+1},${ry+1} ABSORBED TORPEDO ENERGY.`);
-                hit = true;
-                break;
-            }
-            
-            // Starbase?
-            const bIdx = this.localStarbases.findIndex(b => b.x === rx && b.y === ry);
-            if (bIdx !== -1) {
-                this.print("*** STARBASE DESTROYED ***");
-                this.localStarbases.splice(bIdx, 1);
-                this.totalStarbases--;
-                this.galaxy[this.quadX][this.quadY] -= 10;
-                this.print("THAT DOES IT, CAPTAIN!!  YOU ARE HEREBY RELIEVED OF COMMAND");
-                this.print("AND SENTENCED TO 99 STARDATES AT HARD LABOR ON CYGNUS 12!!");
-                this.state = 'ENDED';
-                hit = true;
-                break;
-            }
-        }
-        
-        if (!hit) {
-             // Redraw track? No need, printed as we went.
-        }
-        
-        this.klingonsMoveAndFire();
+        this.executeTorpedo(course);
      });
+  }
+
+  public executeShields(amt: number) {
+      if (this.damage[6] < 0) {
+          this.print("SHIELD CONTROL INOPERABLE");
+          return;
+      }
+      
+      if (isNaN(amt) || amt < 0) {
+          this.print("<SHIELDS UNCHANGED>");
+          return;
+      }
+      if (amt > this.energy + this.shields) {
+          this.print("SHIELD CONTROL REPORTS  'THIS IS NOT THE FEDERATION TREASURY.'");
+          this.print("<SHIELDS UNCHANGED>");
+          return;
+      }
+          
+      this.energy = (this.energy + this.shields) - amt;
+      this.shields = amt;
+      this.print("DEFLECTOR CONTROL ROOM REPORT:");
+      this.print(`  'SHIELDS NOW AT ${this.shields} UNITS PER YOUR COMMAND.'`);
   }
 
   private commandShields() {
@@ -666,20 +680,7 @@ export class StarTrekGame {
       this.print(`ENERGY AVAILABLE = ${this.energy + this.shields}`);
       this.prompt("NUMBER OF UNITS TO SHIELDS", (val) => {
           const amt = parseInt(val);
-          if (isNaN(amt) || amt < 0) {
-              this.print("<SHIELDS UNCHANGED>");
-              return;
-          }
-          if (amt > this.energy + this.shields) {
-              this.print("SHIELD CONTROL REPORTS  'THIS IS NOT THE FEDERATION TREASURY.'");
-              this.print("<SHIELDS UNCHANGED>");
-              return;
-          }
-          
-          this.energy = (this.energy + this.shields) - amt;
-          this.shields = amt;
-          this.print("DEFLECTOR CONTROL ROOM REPORT:");
-          this.print(`  'SHIELDS NOW AT ${this.shields} UNITS PER YOUR COMMAND.'`);
+          this.executeShields(amt);
       });
   }
 
@@ -712,8 +713,8 @@ export class StarTrekGame {
                for (let i = 0; i < 8; i++) {
                    let line = `${i+1}  `;
                    for (let j = 0; j < 8; j++) {
-                       if (this.knownGalaxy[i][j] !== 0) {
-                           line += `   ${this.knownGalaxy[i][j].toString().padStart(3, '0')}`;
+                       if (this.knownGalaxy[j][i] !== 0) {
+                           line += `   ${this.knownGalaxy[j][i].toString().padStart(3, '0')}`;
                        } else {
                            line += "   ***";
                        }

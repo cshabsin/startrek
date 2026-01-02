@@ -1,10 +1,13 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { StarTrekGame, Line } from '../lib/startrek';
 
-export default function GameTerminal() {
+interface GameTerminalProps {
+    gameInstance?: StarTrekGame;
+}
+
+export default function GameTerminal({ gameInstance }: GameTerminalProps) {
   const [lines, setLines] = useState<Line[]>([]);
   const [inputValue, setInputValue] = useState('');
   const gameRef = useRef<StarTrekGame | null>(null);
@@ -12,12 +15,22 @@ export default function GameTerminal() {
 
   useEffect(() => {
     if (!gameRef.current) {
-      gameRef.current = new StarTrekGame();
+      gameRef.current = gameInstance || new StarTrekGame();
       // Flush initial output
-      setLines(gameRef.current.getOutput());
+      // If sharing instance, it might already have output or state.
+      // We should append any existing buffer? Or just start fresh log?
+      // Let's grab whatever is in buffer.
+      setLines(prev => [...prev, ...gameRef.current!.getOutput()]);
+    } else if (gameInstance && gameRef.current !== gameInstance) {
+        // Handle prop change if needed, though usually stable
+        gameRef.current = gameInstance;
+        setLines(prev => [...prev, ...gameRef.current!.getOutput()]);
     }
-  }, []);
+  }, [gameInstance]);
 
+  // Poll for output periodically if game is shared and modified elsewhere?
+  // For now, assume single active view controls game.
+  
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [lines]);
@@ -26,7 +39,7 @@ export default function GameTerminal() {
     e.preventDefault();
     if (!gameRef.current) return;
     
-    const cmd = inputValue; // Keep raw case for display? BASIC used uppercase.
+    const cmd = inputValue; 
     setLines(prev => [...prev, { text: `> ${cmd}`, color: 'cyan' }]);
     
     gameRef.current.processInput(cmd);
@@ -37,7 +50,7 @@ export default function GameTerminal() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-green-500 font-mono p-4 overflow-hidden">
+    <div className="flex flex-col h-screen bg-black text-green-500 font-mono p-4 overflow-hidden pt-12">
       <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
         {lines.map((line, i) => (
           <div key={i} style={{ color: line.color }} className="whitespace-pre-wrap leading-tight">

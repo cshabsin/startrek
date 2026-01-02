@@ -1,0 +1,359 @@
+
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { StarTrekGame, Line } from '../lib/startrek';
+
+interface ModernInterfaceProps {
+    game: StarTrekGame;
+}
+
+export default function ModernInterface({ game }: ModernInterfaceProps) {
+    // We need to force re-renders when game state changes, as the game object mutates
+    const [tick, setTick] = useState(0);
+    const [logs, setLogs] = useState<Line[]>([]);
+    
+    // UI State
+    const [viewState, setViewState] = useState(game.getSectorData());
+    const [animatingShip, setAnimatingShip] = useState<{x: number, y: number} | null>(null);
+    const [overlay, setOverlay] = useState<'LRS' | 'MAP' | null>(null);
+
+    // Command State
+    const [navMode, setNavMode] = useState(false);
+    const [fireMode, setFireMode] = useState<'PHA' | 'TOR' | null>(null);
+    const [shieldMode, setShieldMode] = useState(false);
+    
+    // Inputs
+    const [warpFactor, setWarpFactor] = useState(1);
+    const [phaserEnergy, setPhaserEnergy] = useState(100);
+    const [shieldEnergy, setShieldEnergy] = useState(100);
+
+    const refresh = () => {
+        setTick(t => t + 1);
+        setLogs(game.getOutput());
+        setViewState(game.getSectorData());
+    };
+
+    useEffect(() => {
+        refresh();
+    }, []);
+
+    const exec = (action: () => void) => {
+        action();
+        refresh();
+        setNavMode(false);
+        setFireMode(null);
+        setShieldMode(false);
+    };
+
+    const animateMove = (endX: number, endY: number, onComplete: () => void) => {
+         const startX = viewState.x;
+         const startY = viewState.y;
+         const startTime = performance.now();
+         const duration = 500;
+
+         setNavMode(false);
+
+         const loop = (time: number) => {
+             const elapsed = time - startTime;
+             const progress = Math.min(1, elapsed / duration);
+             const ease = 1 - Math.pow(1 - progress, 3);
+             const curX = startX + (endX - startX) * ease;
+             const curY = startY + (endY - startY) * ease;
+             setAnimatingShip({x: curX, y: curY});
+             if (progress < 1) {
+                 requestAnimationFrame(loop);
+             } else {
+                 setAnimatingShip(null);
+                 onComplete();
+             }
+         };
+         requestAnimationFrame(loop);
+    };
+
+    const handleNav = (course: number, warp: number) => {
+        const oldQuadX = game.quadX;
+        const oldQuadY = game.quadY;
+        game.executeNav(course, warp);
+        if (game.quadX !== oldQuadX || game.quadY !== oldQuadY) {
+            refresh();
+            setNavMode(false);
+        } else {
+            const newX = game.sectX;
+            const newY = game.sectY;
+            animateMove(newX, newY, () => {
+                refresh();
+            });
+        }
+    };
+
+    const damageReport = game.getDamageReport();
+
+    const renderGrid = () => {
+        const grid = [];
+        const entities = viewState;
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 8; x++) {
+                let content = null;
+                let bgClass = "bg-gray-900 border-gray-800";
+                const isShip = !animatingShip && x === entities.x && y === entities.y;
+                
+                if (isShip) {
+                    content = <div className="w-full h-full bg-blue-500 rounded-full border-2 border-white shadow-[0_0_10px_rgba(59,130,246,0.8)]" title="Enterprise"></div>;
+                } else if (entities.klingons.some(k => k.x === x && k.y === y)) {
+                    content = <div className="w-0 h-0 border-l-[10px] border-l-transparent border-t-[15px] border-t-red-600 border-r-[10px] border-r-transparent animate-pulse" title="Klingon"></div>;
+                } else if (entities.starbases.some(b => b.x === x && b.y === y)) {
+                    content = <div className="w-full h-full bg-green-500" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} title="Starbase"></div>;
+                } else if (entities.stars.some(s => s.x === x && s.y === y)) {
+                    content = <div className="w-2 h-2 bg-yellow-200 rounded-full shadow-[0_0_5px_rgba(253,224,71,0.8)]" title="Star"></div>;
+                }
+
+                const handleClick = () => {
+                    if (navMode) {
+                        const dx = x - entities.x;
+                        const dy = y - entities.y;
+                        if (dx === 0 && dy === 0) return;
+                        let angle = Math.atan2(dy, dx); 
+                        let course = 1 - angle / (Math.PI / 4);
+                        if (course < 1) course += 8;
+                        if (course >= 9) course -= 8;
+                        handleNav(course, warpFactor);
+                    }
+                    if (fireMode === 'TOR') {
+                         const dx = x - entities.x;
+                         const dy = y - entities.y;
+                         if (dx === 0 && dy === 0) return;
+                         let angle = Math.atan2(dy, dx);
+                         let course = 1 - angle / (Math.PI / 4);
+                         if (course < 1) course += 8;
+                         if (course >= 9) course -= 8;
+                         exec(() => game.executeTorpedo(course));
+                    }
+                };
+                
+                let cursor = 'cursor-default';
+                if (navMode || fireMode === 'TOR') cursor = 'cursor-crosshair hover:bg-white/10';
+
+                grid.push(
+                    <div key={`${x},${y}`} className={`w-full aspect-square border flex items-center justify-center ${bgClass} ${cursor}`} onClick={handleClick}>
+                        {content}
+                    </div>
+                );
+            }
+        }
+        return grid;
+    };
+
+    return (
+        <div className="flex flex-col h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
+            {/* Header */}
+            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md">
+                <h1 className="text-2xl font-bold tracking-wider text-blue-400">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
+                <div className="text-xl font-mono text-yellow-500">STARDATE {game.stardate.toFixed(1)}</div>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Panel */}
+                <div className="w-1/4 bg-slate-900/50 p-4 border-r border-slate-800 flex flex-col gap-6 overflow-y-auto">
+                    <div className="space-y-4">
+                        <h2 className="text-sm uppercase tracking-widest text-slate-500 font-bold">Systems Status</h2>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs"><span>ENERGY</span> <span>{Math.floor(game.energy)}</span></div>
+                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-yellow-400 transition-all duration-500" style={{width: `${(game.energy/3000)*100}%`}}></div>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs"><span>SHIELDS</span> <span>{Math.floor(game.shields)}</span></div>
+                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-400 transition-all duration-500" style={{width: `${Math.min(100, (game.shields/1000)*100)}%`}}></div>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs"><span>TORPEDOES</span> <span>{game.torpedoes}</span></div>
+                             <div className="flex gap-1">
+                                {Array.from({length: 10}).map((_, i) => (
+                                    <div key={i} className={`h-2 flex-1 rounded-sm ${i < game.torpedoes ? 'bg-red-500' : 'bg-slate-800'}`}></div>
+                                ))}
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="flex-1">
+                        <h2 className="text-sm uppercase tracking-widest text-slate-500 font-bold mb-2">Damage Control</h2>
+                        <div className="space-y-2 text-xs font-mono">
+                            {damageReport.map((sys, i) => (
+                                <div key={i} className="flex justify-between items-center p-2 bg-slate-800 rounded">
+                                    <span className={sys.value < 0 ? 'text-red-400' : 'text-slate-300'}>{sys.name}</span>
+                                    <span className={sys.value < 0 ? 'text-red-500 font-bold' : 'text-green-500'}>
+                                        {sys.value < 0 ? `${Math.floor(sys.value*100)}%` : 'OK'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Center Panel */}
+                <div className="flex-1 p-8 flex flex-col items-center justify-center bg-slate-950 relative">
+                     {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Select Sector</div>}
+                     {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Select Target</div>}
+                     
+                     <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
+                        <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
+                            {renderGrid()}
+                        </div>
+                        
+                        {animatingShip && (
+                             <div 
+                                className="absolute w-[12.5%] h-[12.5%] pointer-events-none transition-none z-20 flex items-center justify-center"
+                                style={{ left: `${(animatingShip.x / 8) * 100}%`, top: `${(animatingShip.y / 8) * 100}%` }}
+                             >
+                                <div className="w-[90%] h-[90%] bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
+                             </div>
+                        )}
+
+                        {/* Overlays */}
+                        {overlay === 'LRS' && (
+                            <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-8">
+                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Long Range Sensors</h3>
+                                <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[400px]">
+                                    {game.getLRSData()?.map((row, y) => row.map((val, x) => (
+                                        <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
+                                            <div className="text-xs text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
+                                            <div className="text-xl font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                                        </div>
+                                    )))}
+                                </div>
+                                <button onClick={() => setOverlay(null)} className="mt-8 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
+                            </div>
+                        )}
+
+                        {overlay === 'MAP' && (
+                            <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-4">
+                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Galactic Map</h3>
+                                <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[500px] aspect-square">
+                                    {game.getGalaxyMap().map((col, x) => col.map((val, y) => (
+                                        // Wait, getGalaxyMap returns col-first or row-first?
+                                        // StarTrekGame uses galaxy[x][y]. getGalaxyMap returns [col][row].
+                                        // So we need to index [x][y].
+                                        <div key={`${x},${y}`} 
+                                            className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono
+                                                ${x === game.quadX && y === game.quadY ? 'bg-blue-900/40 text-blue-200' : 'bg-slate-900/40 text-slate-500'}
+                                            `}
+                                            style={{ gridColumn: x + 1, gridRow: y + 1 }}
+                                        >
+                                            {val === 0 ? '???' : val.toString().padStart(3, '0')}
+                                        </div>
+                                    )))}
+                                </div>
+                                <button onClick={() => setOverlay(null)} className="mt-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
+                            </div>
+                        )}
+                     </div>
+                </div>
+
+                {/* Right Panel */}
+                <div className="w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-2">
+                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); }}
+                            className={`p-2 rounded font-bold text-xs transition-colors ${navMode ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700 text-blue-400'}`}>NAV</button>
+                        <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); }}
+                            className={`p-2 rounded font-bold text-xs transition-colors ${shieldMode ? 'bg-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-blue-300'}`}>SHIELDS</button>
+                        <button onClick={() => { setFireMode(fireMode === 'PHA' ? null : 'PHA'); setNavMode(false); setShieldMode(false); }}
+                            className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'PHA' ? 'bg-orange-600' : 'bg-slate-800 hover:bg-slate-700 text-orange-400'}`}>PHASERS</button>
+                        <button onClick={() => { setFireMode(fireMode === 'TOR' ? null : 'TOR'); setNavMode(false); setShieldMode(false); }}
+                            className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'TOR' ? 'bg-red-600' : 'bg-slate-800 hover:bg-slate-700 text-red-400'}`}>TORPEDO</button>
+                        
+                        <button onClick={() => { exec(() => {}); }} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-green-500">SRS (REFRESH)</button>
+                        <button onClick={() => setOverlay('LRS')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-green-400">LRS SCAN</button>
+                        <button onClick={() => setOverlay('MAP')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-purple-400">GALAXY MAP</button>
+                        <button onClick={() => { if(confirm('Resign command?')) exec(() => game.processInput('XXX')) }} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-gray-500">RESIGN</button>
+                    </div>
+
+                    <div className="bg-slate-800 p-4 rounded-lg min-h-[120px] flex flex-col justify-center">
+                        {navMode && (
+                            <div className="space-y-4">
+                                <label className="block text-xs font-bold uppercase text-slate-400 text-center">Warp Factor: {warpFactor}</label>
+                                <input type="range" min="0.1" max="8" step="0.1" value={warpFactor} onChange={(e) => setWarpFactor(parseFloat(e.target.value))} className="w-full accent-blue-500"/>
+                            </div>
+                        )}
+                        {shieldMode && (
+                            <div className="space-y-4">
+                                <label className="block text-xs font-bold uppercase text-slate-400 text-center">Deflector Control</label>
+                                
+                                {/* Energy Balance Visualization */}
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                                        <span className="text-yellow-500">Ship: {Math.floor(game.energy + game.shields - shieldEnergy)}</span>
+                                        <span className="text-blue-500">Shields: {shieldEnergy}</span>
+                                    </div>
+                                    <div className="relative h-6 bg-slate-900 rounded overflow-hidden border border-slate-700 flex">
+                                        {/* Ship Energy Bar */}
+                                        <div 
+                                            className="h-full bg-yellow-500/50 transition-all duration-75" 
+                                            style={{width: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}
+                                        ></div>
+                                        {/* Shield Energy Bar */}
+                                        <div 
+                                            className="h-full bg-blue-500/50 transition-all duration-75"
+                                            style={{width: `${(shieldEnergy / (game.energy + game.shields)) * 100}%`}}
+                                        ></div>
+                                        
+                                        {/* Slider Input Overlay */}
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max={game.energy + game.shields} 
+                                            value={shieldEnergy} 
+                                            onChange={(e) => setShieldEnergy(parseInt(e.target.value))}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+                                            title="Drag to balance energy"
+                                        />
+                                        
+                                        {/* Visual Thumb Marker (calculated position) */}
+                                        <div 
+                                            className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75"
+                                            style={{left: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Sets */}
+                                <div className="grid grid-cols-4 gap-1">
+                                    <button onClick={() => setShieldEnergy(0)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">0</button>
+                                    <button onClick={() => setShieldEnergy(500)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">500</button>
+                                    <button onClick={() => setShieldEnergy(1000)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">1000</button>
+                                    <button onClick={() => setShieldEnergy(Math.floor(game.energy + game.shields))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">MAX</button>
+                                </div>
+
+                                <button 
+                                    onClick={() => exec(() => game.executeShields(shieldEnergy))}
+                                    className="w-full bg-blue-600 py-2 rounded text-xs font-bold hover:bg-blue-500 shadow-lg"
+                                >
+                                    TRANSFER POWER
+                                </button>
+                            </div>
+                        )}
+                        {fireMode === 'PHA' && (
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold uppercase text-slate-400">Phaser Energy</label>
+                                <div className="flex gap-2">
+                                    <input type="number" value={phaserEnergy} onChange={(e) => setPhaserEnergy(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-right text-xs"/>
+                                    <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="bg-orange-600 px-2 rounded text-xs font-bold">FIRE</button>
+                                </div>
+                            </div>
+                        )}
+                        {!navMode && !fireMode && !shieldMode && <div className="text-center text-slate-500 italic text-xs">Ready for orders...</div>}
+                    </div>
+
+                    <div className="flex-1 bg-black p-2 font-mono text-[10px] overflow-y-auto text-green-500 rounded border border-slate-800">
+                        {logs.slice().reverse().map((line, i) => (
+                            <div key={i} className="whitespace-pre-wrap mb-1 border-b border-green-900/20 pb-1">{line.text}</div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
