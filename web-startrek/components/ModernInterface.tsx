@@ -87,7 +87,10 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     const handleNav = (course: number, warp: number) => {
         const oldQuadX = game.quadX;
         const oldQuadY = game.quadY;
-        game.executeNav(course, warp);
+        
+        // Suppress logs for modern nav
+        game.executeNav(course, warp, true);
+        
         if (game.quadX !== oldQuadX || game.quadY !== oldQuadY) {
             refresh();
             setNavMode(false);
@@ -114,6 +117,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
             setWarpFactor(maxWarp);
         }
     }, [maxWarp, warpFactor]);
+
+    useEffect(() => {
+        if (phaserEnergy > game.energy) {
+            setPhaserEnergy(Math.floor(game.energy));
+        }
+    }, [game.energy, phaserEnergy]);
 
     const CompassRose = ({ course }: { course: number | '' }) => {
         const labels = ["1 (E)", "2 (NE)", "3 (N)", "4 (NW)", "5 (W)", "6 (SW)", "7 (S)", "8 (SE)"];
@@ -214,9 +223,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md">
-                <h1 className="text-2xl font-bold tracking-wider text-blue-400">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
-                <div className="text-xl font-mono text-yellow-500">STARDATE {game.stardate.toFixed(1)}</div>
+            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md pr-48">
+                <h1 className="text-2xl font-bold tracking-wider text-blue-400 shrink-0">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
+                <div className="text-xl font-mono text-yellow-500 truncate ml-4">
+                    STARDATE {game.stardate.toFixed(1)}
+                    <span className="text-sm text-slate-500 ml-3">({missionStats.daysLeft} DAYS LEFT)</span>
+                </div>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -291,6 +303,11 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                      {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Enter Manual Course</div>}
                      
                      <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
+                        {/* Position Overlay */}
+                        <div className="absolute top-2 left-2 z-10 bg-black/50 text-[10px] text-slate-400 px-2 py-1 rounded border border-slate-700">
+                            Q: {game.quadX + 1},{game.quadY + 1} &nbsp; S: {game.sectX + 1},{game.sectY + 1}
+                        </div>
+
                         <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
                             {renderGrid()}
                         </div>
@@ -300,6 +317,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                              </div>
                         )}
                         
+                        {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
                             <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto">
                                 <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2">Status Report</h3>
@@ -355,14 +373,21 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         {overlay === 'LRS' && (
                             <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-8">
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Long Range Sensors</h3>
-                                <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[400px]">
-                                    {game.getLRSData()?.map((row, y) => row.map((val, x) => (
-                                        <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
-                                            <div className="text-xs text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
-                                            <div className="text-xl font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
-                                        </div>
-                                    )))}
-                                </div>
+                                {game.getLRSData() ? (
+                                    <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[400px]">
+                                        {game.getLRSData()?.map((row, y) => row.map((val, x) => (
+                                            <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
+                                                <div className="text-xs text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
+                                                <div className="text-xl font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                                            </div>
+                                        )))}
+                                    </div>
+                                ) : (
+                                    <div className="text-red-500 font-bold text-xl animate-pulse text-center border-2 border-red-500 p-4 rounded bg-red-900/20">
+                                        SENSORS OFFLINE
+                                        <div className="text-sm text-red-400 mt-2 font-normal">Damage repair in progress</div>
+                                    </div>
+                                )}
                                 <button onClick={() => setOverlay(null)} className="mt-8 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
                         )}
@@ -399,7 +424,8 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                                     // Round to 1 decimal
                                                     dist = Math.round(dist * 10) / 10;
                                                     
-                                                    if (confirm(`Warp to Quadrant ${x+1},${y+1}?\nCourse: ${course.toFixed(1)}, Warp: ${dist}`)) {
+                                                    if (confirm(`Warp to Quadrant ${x+1},${y+1}?
+Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                                         setOverlay(null);
                                                         handleNav(course, dist);
                                                     }
@@ -436,6 +462,19 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     </div>
 
                     <div className="bg-slate-800 p-4 rounded-lg min-h-[150px] flex flex-col justify-center">
+                        {/* Persistent Repair Button if Docked and Damaged */}
+                        {game.dockStatus && damageReport.some(d => d.value < 0) && !navMode && !fireMode && !shieldMode && !computerMode && (
+                            <div className="mb-4 p-3 bg-blue-900/30 border border-blue-500 rounded text-center">
+                                <div className="text-[10px] text-blue-300 uppercase font-bold mb-2">Starbase Technicians Available</div>
+                                <button 
+                                    onClick={() => exec(() => game.executeRepairOrder())}
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs shadow-lg"
+                                >
+                                    AUTHORIZE REPAIRS
+                                </button>
+                            </div>
+                        )}
+
                         {navMode && (
                             <div className="space-y-4">
                                 <CompassRose course={targetCourse} />
@@ -445,7 +484,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         ref={courseInputRef}
                                         type="number" 
                                         value={targetCourse} 
-                                        onChange={(e) => setTargetCourse(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        onChange={(e) => setTargetCourse(e.target.value === '' ? '' : parseFloat(e.target.value))} 
                                         className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center text-sm font-mono text-white"
                                         placeholder="1-9"
                                     />
@@ -499,12 +538,36 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                             </div>
                         )}
                         {fireMode === 'PHA' && (
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold uppercase text-slate-400">Phaser Energy</label>
-                                <div className="flex gap-2">
-                                    <input type="number" value={phaserEnergy} onChange={(e) => setPhaserEnergy(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-right text-xs text-white"/>
-                                    <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="bg-orange-600 px-2 rounded text-xs font-bold">FIRE</button>
+                            <div className="space-y-4">
+                                <label className="block text-xs font-bold uppercase text-slate-400 text-center">Phaser Control</label>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                                        <span>Output Level</span>
+                                        <span className="text-orange-500">{phaserEnergy} Units</span>
+                                    </div>
+                                    <div className="relative h-6 bg-slate-900 rounded overflow-hidden border border-slate-700">
+                                        <div 
+                                            className="h-full bg-orange-500/50 transition-all duration-75" 
+                                            style={{width: `${(phaserEnergy / Math.max(1, game.energy)) * 100}%`}}
+                                        ></div>
+                                        <input 
+                                            type="range" min="1" max={Math.floor(game.energy)} value={phaserEnergy} 
+                                            onChange={(e) => setPhaserEnergy(parseInt(e.target.value))} 
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+                                        />
+                                        <div 
+                                            className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75"
+                                            style={{left: `${(phaserEnergy / Math.max(1, game.energy)) * 100}%`}}
+                                        ></div>
+                                    </div>
                                 </div>
+                                <div className="grid grid-cols-4 gap-1">
+                                    <button onClick={() => setPhaserEnergy(Math.min(100, Math.floor(game.energy)))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">100</button>
+                                    <button onClick={() => setPhaserEnergy(Math.min(250, Math.floor(game.energy)))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">250</button>
+                                    <button onClick={() => setPhaserEnergy(Math.min(500, Math.floor(game.energy)))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">500</button>
+                                    <button onClick={() => setPhaserEnergy(Math.floor(game.energy))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">MAX</button>
+                                </div>
+                                <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="w-full bg-orange-600 py-2 rounded text-xs font-bold hover:bg-orange-500 shadow-lg">FIRE PHASERS</button>
                             </div>
                         )}
                         {fireMode === 'TOR' && (

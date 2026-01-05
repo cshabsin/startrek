@@ -165,7 +165,7 @@ export class StarTrekGame {
     this.enterQuadrant();
   }
 
-  private enterQuadrant() {
+  private enterQuadrant(suppressLogs: boolean = false) {
     // Populate local entities based on galaxy map
     const val = this.galaxy[this.quadX][this.quadY];
     const kCount = Math.floor(val / 100);
@@ -215,7 +215,7 @@ export class StarTrekGame {
     // Update known galaxy
     this.knownGalaxy[this.quadX][this.quadY] = this.galaxy[this.quadX][this.quadY];
 
-    if (kCount > 0) {
+    if (!suppressLogs && kCount > 0) {
       this.print("");
       this.print("COMBAT AREA      CONDITION RED");
       if (this.shields <= 200) {
@@ -223,7 +223,7 @@ export class StarTrekGame {
       }
     }
     
-    this.shortRangeScan();
+    this.printShortRangeScan(suppressLogs);
   }
 
   // --- Input Processing ---
@@ -240,7 +240,7 @@ export class StarTrekGame {
 
     // Main Command Loop
     if (input === 'NAV') this.commandNav();
-    else if (input === 'SRS') this.shortRangeScan();
+    else if (input === 'SRS') this.printShortRangeScan();
     else if (input === 'LRS') this.longRangeScan();
     else if (input === 'PHA') this.commandPhasers();
     else if (input === 'TOR') this.commandTorpedo();
@@ -277,12 +277,7 @@ export class StarTrekGame {
   
   // --- Commands ---
 
-  private shortRangeScan() {
-    if (this.damage[1] < 0) {
-      this.print("SHORT RANGE SENSORS ARE OUT");
-      return;
-    }
-    
+  private updateSensorStatus() {
     // Check Docking
     let adjacentToStarbase = false;
     for (let dx = -1; dx <= 1; dx++) {
@@ -306,6 +301,17 @@ export class StarTrekGame {
     } else {
         this.dockStatus = false;
     }
+  }
+
+  private printShortRangeScan(suppressLogs: boolean = false) {
+    if (this.damage[1] < 0) {
+      if (!suppressLogs) this.print("SHORT RANGE SENSORS ARE OUT");
+      return;
+    }
+    
+    this.updateSensorStatus();
+
+    if (suppressLogs) return;
 
     this.print("---------------------------------");
     for (let y = 0; y < 8; y++) {
@@ -413,7 +419,7 @@ export class StarTrekGame {
     return this.knownGalaxy.map(col => [...col]);
   }
 
-  public executeNav(course: number, warp: number) {
+  public executeNav(course: number, warp: number, suppressLogs: boolean = false) {
         if (isNaN(course) || course < 1 || course >= 9) {
             this.print("   LT. SULU REPORTS, 'INCORRECT COURSE DATA, SIR!'");
             return;
@@ -462,9 +468,38 @@ export class StarTrekGame {
         const stepX = dx * moveDist / steps;
         const stepY = dy * moveDist / steps;
         
+        let lastSectX = this.sectX;
+        let lastSectY = this.sectY;
+        let collision = false;
+
         for (let i = 0; i < steps; i++) {
             globalX += stepX;
             globalY += stepY;
+            
+            // Local collision check
+            const currentQX = Math.floor(globalX / 8);
+            const currentQY = Math.floor(globalY / 8);
+            if (currentQX === this.quadX && currentQY === this.quadY) {
+                const sx = Math.floor(globalX % 8);
+                const sy = Math.floor(globalY % 8);
+                
+                if (sx !== lastSectX || sy !== lastSectY) {
+                    const isOccupied = 
+                        this.localStars.some(s => s.x === sx && s.y === sy) ||
+                        this.localStarbases.some(b => b.x === sx && b.y === sy) ||
+                        this.localKlingons.some(k => k.x === sx && k.y === sy);
+                    
+                    if (isOccupied) {
+                        this.print(`WARP ENGINES SHUT DOWN AT SECTOR ${sx+1},${sy+1} DUE TO BAD NAVIGATION`);
+                        globalX -= stepX;
+                        globalY -= stepY;
+                        collision = true;
+                        break;
+                    }
+                    lastSectX = sx;
+                    lastSectY = sy;
+                }
+            }
         }
         
         const finalQX = Math.floor(globalX / 8);
@@ -493,9 +528,9 @@ export class StarTrekGame {
              this.sectY = Math.floor(finalSY);
              
              if (changedQuad) {
-                 this.enterQuadrant();
+                 this.enterQuadrant(suppressLogs);
              } else {
-                 this.shortRangeScan();
+                 this.printShortRangeScan(suppressLogs);
              }
         }
   }
@@ -703,11 +738,46 @@ export class StarTrekGame {
       });
   }
 
+  public executeRepairOrder() {
+      if (!this.dockStatus) return;
+      
+      let repairTime = 0;
+      for (let i = 0; i < 8; i++) {
+          if (this.damage[i] < 0) repairTime += 0.1;
+      }
+      if (repairTime === 0) return;
+      
+      repairTime += (0.5 * Math.random());
+      if (repairTime >= 1) repairTime = 0.9;
+      
+      this.damage.fill(0);
+      this.stardate += (repairTime + 0.1);
+      this.print(`TECHNICIANS HAVE COMPLETED REPAIRS.`);
+      this.print(`STARDATE IS NOW ${this.stardate.toFixed(1)}`);
+  }
+
   private commandDamage() {
     this.print("DEVICE             STATE OF REPAIR");
+    let hasDamage = false;
     for (let i = 0; i < 8; i++) {
         let state = (Math.floor(this.damage[i] * 100) / 100).toString();
         this.print(`${this.damageNames[i].padEnd(25)} ${state}`);
+        if (this.damage[i] < 0) hasDamage = true;
+    }
+    
+    if (this.dockStatus && hasDamage) {
+        let repairTime = 0;
+        for (let i = 0; i < 8; i++) if (this.damage[i] < 0) repairTime += 0.1;
+        repairTime += 0.2; 
+        
+        this.print("");
+        this.print(`TECHNICIANS STANDING BY TO EFFECT REPAIRS;`);
+        this.print(`ESTIMATED TIME: ${repairTime.toFixed(2)} STARDATES`);
+        this.prompt("AUTHORIZE REPAIR ORDER (Y/N)?", (val) => {
+            if (val === 'Y') {
+                this.executeRepairOrder();
+            }
+        });
     }
   }
 
@@ -894,10 +964,11 @@ export class StarTrekGame {
           }
       }
       
-      // Random damage?
+      // Random damage (Ship system failures)
       if (Math.random() > 0.9) {
           const dev = Math.floor(Math.random() * 8);
           this.damage[dev] -= (Math.random() * 5 + 1);
+          this.print(`--- RANDOM SYSTEM FAILURE ---`);
           this.print(`DAMAGE CONTROL REPORT: ${this.damageNames[dev]} DAMAGED`);
       }
   }
