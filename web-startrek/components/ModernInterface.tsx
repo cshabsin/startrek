@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -25,10 +24,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     
     // Inputs
     const [warpFactor, setWarpFactor] = useState(1);
+    const [targetCourse, setTargetCourse] = useState<number | ''>(''); // Allow empty for manual entry
     const [phaserEnergy, setPhaserEnergy] = useState(100);
     const [shieldEnergy, setShieldEnergy] = useState(100);
 
     const logsEndRef = useRef<HTMLDivElement>(null);
+    const courseInputRef = useRef<HTMLInputElement>(null);
 
     const refresh = () => {
         setTick(t => t + 1);
@@ -44,12 +45,20 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [logs]);
 
+    // Auto-focus course input when entering Nav/Tor mode
+    useEffect(() => {
+        if ((navMode || fireMode === 'TOR') && courseInputRef.current) {
+            courseInputRef.current.focus();
+        }
+    }, [navMode, fireMode]);
+
     const exec = (action: () => void) => {
         action();
         refresh();
         setNavMode(false);
         setFireMode(null);
         setShieldMode(false);
+        setTargetCourse('');
     };
 
     const animateMove = (endX: number, endY: number, onComplete: () => void) => {
@@ -82,17 +91,64 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         if (game.quadX !== oldQuadX || game.quadY !== oldQuadY) {
             refresh();
             setNavMode(false);
+            setTargetCourse('');
         } else {
             const newX = game.sectX;
             const newY = game.sectY;
             animateMove(newX, newY, () => {
                 refresh();
+                setTargetCourse('');
             });
         }
     };
 
     const damageReport = game.getDamageReport();
     const missionStats = game.getMissionStats();
+
+    // Clamp warp factor if engines damaged
+    const warpEnginesDamaged = damageReport[0].value < 0;
+    const maxWarp = warpEnginesDamaged ? 0.2 : 8;
+    
+    useEffect(() => {
+        if (warpFactor > maxWarp) {
+            setWarpFactor(maxWarp);
+        }
+    }, [maxWarp, warpFactor]);
+
+    const CompassRose = ({ course }: { course: number | '' }) => {
+        const labels = ["1 (E)", "2 (NE)", "3 (N)", "4 (NW)", "5 (W)", "6 (SW)", "7 (S)", "8 (SE)"];
+        const angles = [0, 315, 270, 225, 180, 135, 90, 45]; // Degrees
+        
+        return (
+            <div className="relative w-24 h-24 mx-auto mb-2 border border-slate-700 rounded-full bg-slate-900 shadow-inner">
+                {labels.map((label, i) => {
+                    const angleRad = (angles[i] * Math.PI) / 180;
+                    const r = 38; // px
+                    const x = 48 + r * Math.cos(angleRad);
+                    const y = 48 + r * Math.sin(angleRad);
+                    return (
+                        <div key={i} className="absolute text-[8px] font-bold text-slate-500 -translate-x-1/2 -translate-y-1/2" style={{ left: x, top: y }}>
+                            {label.split(' ')[0]}
+                        </div>
+                    );
+                })}
+                {/* Center Point */}
+                <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-slate-600 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                
+                {/* Course Indicator Line */}
+                {course !== '' && (
+                    <div 
+                        className="absolute top-1/2 left-1/2 h-10 w-0.5 bg-blue-500 origin-bottom shadow-[0_0_5px_rgba(59,130,246,1)]"
+                        style={{ 
+                            transform: `translate(-50%, -100%) rotate(${90 - ((Number(course) - 1) * 45)}deg)` 
+                        }}
+                    >
+                        <div className="absolute top-0 left-1/2 w-2 h-2 bg-blue-400 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_8px_white]"></div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     const renderGrid = () => {
         const grid = [];
@@ -112,27 +168,37 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     content = <div className="w-2 h-2 bg-yellow-200 rounded-full shadow-[0_0_5px_rgba(253,224,71,0.8)]" title="Star"></div>;
                 }
                 const handleClick = () => {
+                    const dx = x - entities.x;
+                    const dy = y - entities.y;
+                    
+                    if (dx === 0 && dy === 0) return; // Ignore clicks on self
+                    
                     if (navMode) {
-                        const dx = x - entities.x;
-                        const dy = y - entities.y;
-                        if (dx === 0 && dy === 0) return;
+                        // Calculate Course
                         let angle = Math.atan2(dy, dx); 
                         let course = 1 - angle / (Math.PI / 4);
                         if (course < 1) course += 8;
                         if (course >= 9) course -= 8;
-                        handleNav(course, warpFactor);
+                        
+                        // Calculate Auto-Warp
+                        const distSectors = Math.sqrt(dx*dx + dy*dy);
+                        let autoWarp = Math.sqrt(distSectors / 8);
+                        autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
+                        autoWarp = Math.round(autoWarp * 20) / 20;
+                        
+                        // Set State (Do not execute yet)
+                        setTargetCourse(parseFloat(course.toFixed(2)));
+                        setWarpFactor(autoWarp);
                     }
                     if (fireMode === 'TOR') {
-                         const dx = x - entities.x;
-                         const dy = y - entities.y;
-                         if (dx === 0 && dy === 0) return;
                          let angle = Math.atan2(dy, dx);
                          let course = 1 - angle / (Math.PI / 4);
                          if (course < 1) course += 8;
                          if (course >= 9) course -= 8;
-                         exec(() => game.executeTorpedo(course));
+                         setTargetCourse(parseFloat(course.toFixed(2)));
                     }
                 };
+                
                 let cursor = 'cursor-default';
                 if (navMode || fireMode === 'TOR') cursor = 'cursor-crosshair hover:bg-white/10';
                 grid.push(
@@ -211,7 +277,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                 <div key={i} className="flex justify-between items-center p-2 bg-slate-800 rounded">
                                     <span className={sys.value < 0 ? 'text-red-400' : 'text-slate-300'}>{sys.name}</span>
                                     <span className={sys.value < 0 ? 'text-red-500 font-bold' : 'text-green-500'}>
-                                        {sys.value < 0 ? `${Math.floor(sys.value*100)}%` : 'OK'}
+                                        {sys.value < 0 ? `${Math.abs(sys.value).toFixed(1)}d` : 'OK'}
                                     </span>
                                 </div>
                             ))}
@@ -221,8 +287,8 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
 
                 {/* Center Panel */}
                 <div className="flex-1 p-8 flex flex-col items-center justify-center bg-slate-950 relative">
-                     {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Select Sector</div>}
-                     {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Select Target</div>}
+                     {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Enter Manual Course</div>}
+                     {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Enter Manual Course</div>}
                      
                      <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
                         <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
@@ -304,11 +370,45 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                             <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-4">
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Galactic Map</h3>
                                 <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[500px] aspect-square">
-                                    {game.getGalaxyMap().map((col, x) => col.map((val, y) => (
-                                        <div key={`${x},${y}`} className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono ${x === game.quadX && y === game.quadY ? 'bg-blue-900/40 text-blue-200' : 'bg-slate-900/40 text-slate-500'}`} style={{ gridColumn: x + 1, gridRow: y + 1 }}>
-                                            {val === 0 ? '???' : val.toString().padStart(3, '0')}
-                                        </div>
-                                    )))}
+                                    {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
+                                        const isCurrent = x === game.quadX && y === game.quadY;
+                                        return (
+                                            <div 
+                                                key={`${x},${y}`} 
+                                                className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono cursor-pointer hover:bg-white/20 transition-colors
+                                                    ${isCurrent ? 'bg-blue-900/40 text-blue-200 border-blue-500' : 'bg-slate-900/40 text-slate-500'}
+                                                `} 
+                                                style={{ gridColumn: x + 1, gridRow: y + 1 }}
+                                                onClick={() => {
+                                                    if (isCurrent) return; 
+                                                    
+                                                    const dx = x - game.quadX;
+                                                    const dy = y - game.quadY;
+                                                    
+                                                    // Calculate course
+                                                    let angle = Math.atan2(dy, dx);
+                                                    let course = 1 - angle / (Math.PI / 4);
+                                                    if (course < 1) course += 8;
+                                                    if (course >= 9) course -= 8;
+                                                    
+                                                    // Calculate Warp (Distance in Quadrants)
+                                                    let dist = Math.sqrt(dx*dx + dy*dy);
+                                                    // Clamp to max engine speed
+                                                    if (dist > maxWarp) dist = maxWarp;
+                                                    
+                                                    // Round to 1 decimal
+                                                    dist = Math.round(dist * 10) / 10;
+                                                    
+                                                    if (confirm(`Warp to Quadrant ${x+1},${y+1}?\nCourse: ${course.toFixed(1)}, Warp: ${dist}`)) {
+                                                        setOverlay(null);
+                                                        handleNav(course, dist);
+                                                    }
+                                                }}
+                                            >
+                                                {val === 0 ? '???' : val.toString().padStart(3, '0')}
+                                            </div>
+                                        );
+                                    }))}
                                 </div>
                                 <button onClick={() => setOverlay(null)} className="mt-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
@@ -319,13 +419,13 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                 {/* Right Panel */}
                 <div className="w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); setComputerMode(false); }}
+                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); setComputerMode(false); setTargetCourse(''); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${navMode ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700 text-blue-400'}`}>NAV</button>
                         <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${shieldMode ? 'bg-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-blue-300'}`}>SHIELDS</button>
                         <button onClick={() => { setFireMode(fireMode === 'PHA' ? null : 'PHA'); setNavMode(false); setShieldMode(false); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'PHA' ? 'bg-orange-600' : 'bg-slate-800 hover:bg-slate-700 text-orange-400'}`}>PHASERS</button>
-                        <button onClick={() => { setFireMode(fireMode === 'TOR' ? null : 'TOR'); setNavMode(false); setShieldMode(false); setComputerMode(false); }}
+                        <button onClick={() => { setFireMode(fireMode === 'TOR' ? null : 'TOR'); setNavMode(false); setShieldMode(false); setComputerMode(false); setTargetCourse(''); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'TOR' ? 'bg-red-600' : 'bg-slate-800 hover:bg-slate-700 text-red-400'}`}>TORPEDO</button>
                         
                         <button onClick={() => { setComputerMode(!computerMode); setNavMode(false); setFireMode(null); setShieldMode(false); }}
@@ -338,8 +438,40 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     <div className="bg-slate-800 p-4 rounded-lg min-h-[150px] flex flex-col justify-center">
                         {navMode && (
                             <div className="space-y-4">
-                                <label className="block text-xs font-bold uppercase text-slate-400 text-center">Warp Factor: {warpFactor}</label>
-                                <input type="range" min="0.1" max="8" step="0.1" value={warpFactor} onChange={(e) => setWarpFactor(parseFloat(e.target.value))} className="w-full accent-blue-500"/>
+                                <CompassRose course={targetCourse} />
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold uppercase text-slate-400 text-center">Manual Course Entry</label>
+                                    <input 
+                                        ref={courseInputRef}
+                                        type="number" 
+                                        value={targetCourse} 
+                                        onChange={(e) => setTargetCourse(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center text-sm font-mono text-white"
+                                        placeholder="1-9"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold uppercase text-slate-400 text-center">Warp Factor: {warpFactor}</label>
+                                    <input 
+                                        type="range" 
+                                        min="0.05" 
+                                        max={maxWarp} 
+                                        step="0.05" 
+                                        value={warpFactor} 
+                                        onChange={(e) => setWarpFactor(parseFloat(e.target.value))} 
+                                        className={`w-full ${warpEnginesDamaged ? 'accent-red-500' : 'accent-blue-500'}`}
+                                    />
+                                </div>
+                                {warpEnginesDamaged && <div className="text-[10px] text-red-500 font-bold text-center animate-pulse">WARP ENGINES DAMAGED - MAX 0.2</div>}
+                                
+                                <button 
+                                    onClick={() => targetCourse !== '' && handleNav(Number(targetCourse), warpFactor)} 
+                                    disabled={targetCourse === ''}
+                                    className={`w-full py-2 rounded text-xs font-bold shadow-lg ${targetCourse !== '' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    ENGAGE
+                                </button>
+                                <div className="text-[9px] text-slate-500 text-center uppercase mt-1">Tactical Computer: Click Sector to Auto-Plot</div>
                             </div>
                         )}
                         {shieldMode && (
@@ -373,6 +505,31 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                     <input type="number" value={phaserEnergy} onChange={(e) => setPhaserEnergy(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-right text-xs text-white"/>
                                     <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="bg-orange-600 px-2 rounded text-xs font-bold">FIRE</button>
                                 </div>
+                            </div>
+                        )}
+                        {fireMode === 'TOR' && (
+                            <div className="space-y-4">
+                                <CompassRose course={targetCourse} />
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold uppercase text-slate-400 text-center">Manual Course Entry</label>
+                                    <input 
+                                        ref={courseInputRef}
+                                        type="number" 
+                                        value={targetCourse} 
+                                        onChange={(e) => setTargetCourse(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center text-sm font-mono text-white"
+                                        placeholder="1-9"
+                                    />
+                                </div>
+                                
+                                <button 
+                                    onClick={() => targetCourse !== '' && exec(() => game.executeTorpedo(Number(targetCourse)))}
+                                    disabled={targetCourse === ''}
+                                    className={`w-full py-2 rounded text-xs font-bold shadow-lg ${targetCourse !== '' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    FIRE TORPEDO
+                                </button>
+                                <div className="text-[9px] text-slate-500 text-center uppercase mt-1">Tactical Computer: Click Sector to Auto-Plot</div>
                             </div>
                         )}
                         {computerMode && (

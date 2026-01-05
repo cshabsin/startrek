@@ -446,7 +446,7 @@ export class StarTrekGame {
         this.klingonsMoveAndFire();
         this.repairSystem(warp); 
         
-        const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
+        const timeSpent = warp < 1 ? 0.05 * Math.floor(20 * warp) : 1;
         this.stardate += timeSpent;
         if (this.stardate > this.stardateEnd) {
             this.gameOver();
@@ -476,9 +476,15 @@ export class StarTrekGame {
              this.print("LT. UHURA REPORTS MESSAGE FROM STARFLEET COMMAND:");
              this.print("  'PERMISSION TO ATTEMPT CROSSING OF GALACTIC PERIMETER");
              this.print("  IS HEREBY *DENIED*.  SHUT DOWN YOUR ENGINES.'");
-             this.quadX = Math.max(0, Math.min(7, finalQX));
-             this.quadY = Math.max(0, Math.min(7, finalQY));
-             this.sectX = 0; this.sectY = 0; 
+             
+             // Clamp to galaxy boundaries
+             globalX = Math.max(0, Math.min(63.9, globalX));
+             globalY = Math.max(0, Math.min(63.9, globalY));
+             
+             this.quadX = Math.floor(globalX / 8);
+             this.quadY = Math.floor(globalY / 8);
+             this.sectX = Math.floor(globalX % 8);
+             this.sectY = Math.floor(globalY % 8);
         } else {
              const changedQuad = (finalQX !== this.quadX || finalQY !== this.quadY);
              this.quadX = finalQX;
