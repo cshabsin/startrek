@@ -165,7 +165,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 let content = null;
-                let bgClass = "bg-gray-900 border-gray-800";
+                const bgClass = "bg-gray-900 border-gray-800";
                 const isShip = !animatingShip && x === entities.x && y === entities.y;
                 if (isShip) {
                     content = <div className="w-full h-full bg-blue-500 rounded-full border-2 border-white shadow-[0_0_10px_rgba(59,130,246,0.8)]" title="Enterprise"></div>;
@@ -184,7 +184,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     
                     if (navMode) {
                         // Calculate Course
-                        let angle = Math.atan2(dy, dx); 
+                        const angle = Math.atan2(dy, dx);
                         let course = 1 - angle / (Math.PI / 4);
                         if (course < 1) course += 8;
                         if (course >= 9) course -= 8;
@@ -200,7 +200,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         setWarpFactor(autoWarp);
                     }
                     if (fireMode === 'TOR') {
-                         let angle = Math.atan2(dy, dx);
+                         const angle = Math.atan2(dy, dx);
                          let course = 1 - angle / (Math.PI / 4);
                          if (course < 1) course += 8;
                          if (course >= 9) course -= 8;
@@ -411,7 +411,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                                     const dy = y - game.quadY;
                                                     
                                                     // Calculate course
-                                                    let angle = Math.atan2(dy, dx);
+                                                    const angle = Math.atan2(dy, dx);
                                                     let course = 1 - angle / (Math.PI / 4);
                                                     if (course < 1) course += 8;
                                                     if (course >= 9) course -= 8;

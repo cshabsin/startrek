@@ -571,7 +571,7 @@ export class StarTrekGame {
     for (let i = this.localKlingons.length - 1; i >= 0; i--) {
         const k = this.localKlingons[i];
         const dist = Math.sqrt(Math.pow(k.x - this.sectX, 2) + Math.pow(k.y - this.sectY, 2));
-        let damage = Math.floor((perKlingon / dist) * (Math.random() + 2));
+        const damage = Math.floor((perKlingon / dist) * (Math.random() + 2));
         
         if (damage > 0.15 * k.energy) {
              this.print(`${damage} UNIT HIT ON KLINGON AT SECTOR ${k.x+1},${k.y+1}`);
@@ -760,7 +760,7 @@ export class StarTrekGame {
     this.print("DEVICE             STATE OF REPAIR");
     let hasDamage = false;
     for (let i = 0; i < 8; i++) {
-        let state = (Math.floor(this.damage[i] * 100) / 100).toString();
+        const state = (Math.floor(this.damage[i] * 100) / 100).toString();
         this.print(`${this.damageNames[i].padEnd(25)} ${state}`);
         if (this.damage[i] < 0) hasDamage = true;
     }
@@ -810,7 +810,7 @@ export class StarTrekGame {
           // Also print damage report
           this.print("DEVICE             STATE OF REPAIR");
           for (let i = 0; i < 8; i++) {
-              let state = (Math.floor(this.damage[i] * 100) / 100).toString();
+              const state = (Math.floor(this.damage[i] * 100) / 100).toString();
               this.print(`${this.damageNames[i].padEnd(25)} ${state}`);
           }
       } else if (val === '2') {
@@ -897,7 +897,7 @@ export class StarTrekGame {
       // Formula: Course = 1 - angle / (PI/4).
       // Check: 1 - (-PI/2)/(PI/4) = 1 - (-2) = 3. Correct.
       // Check: 1 - (PI)/(PI/4) = 1 - 4 = -3 -> +8 = 5. Correct.
-      let angle = Math.atan2(dy, dx);
+      const angle = Math.atan2(dy, dx);
       let course = 1 - angle / (Math.PI / 4);
       if (course < 1) course += 8;
       
