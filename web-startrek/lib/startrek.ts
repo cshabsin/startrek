@@ -378,6 +378,19 @@ export class StarTrekGame {
       return this.damage.map((val, i) => ({ name: this.damageNames[i], value: val }));
   }
 
+  public getMissionStats() {
+      return {
+          stardate: this.stardate,
+          stardateEnd: this.stardateEnd,
+          daysLeft: Math.floor((this.stardateEnd - this.stardate) * 10) / 10,
+          klingonsLeft: this.totalKlingons,
+          klingonsStart: this.startKlingons,
+          starbases: this.totalStarbases,
+          dockStatus: this.dockStatus,
+          condition: this.getCondition()
+      };
+  }
+
   public getLRSData() {
     if (this.damage[2] < 0) return null;
     const data = [];
@@ -692,6 +705,91 @@ export class StarTrekGame {
     }
   }
 
+  public executeComputer(val: string) {
+      if (this.damage[7] < 0) {
+          this.print("COMPUTER DISABLED");
+          return;
+      }
+      if (val === '0') {
+            // Galaxy Map
+            this.print("COMPUTER RECORD OF GALAXY");
+            this.print("       1     2     3     4     5     6     7     8");
+            this.print("     ----- ----- ----- ----- ----- ----- ----- -----");
+            for (let i = 0; i < 8; i++) {
+                let line = `${i+1}  `;
+                for (let j = 0; j < 8; j++) {
+                    if (this.knownGalaxy[j][i] !== 0) {
+                        line += `   ${this.knownGalaxy[j][i].toString().padStart(3, '0')}`;
+                    } else {
+                        line += "   ***";
+                    }
+                }
+                this.print(line);
+            }
+      } else if (val === '1') {
+          this.print("   STATUS REPORT:");
+          this.print(`KLINGONS LEFT: ${this.totalKlingons}`);
+          this.print(`MISSION MUST BE COMPLETED IN ${Math.floor((this.stardateEnd - this.stardate)*10)/10} STARDATES`);
+          this.print(`THE FEDERATION IS MAINTAINING ${this.totalStarbases} STARBASES IN THE GALAXY`);
+          // Also print damage report
+          this.print("DEVICE             STATE OF REPAIR");
+          for (let i = 0; i < 8; i++) {
+              let state = (Math.floor(this.damage[i] * 100) / 100).toString();
+              this.print(`${this.damageNames[i].padEnd(25)} ${state}`);
+          }
+      } else if (val === '2') {
+          // Photon Torpedo Data
+          if (this.localKlingons.length === 0) {
+              this.print("SCIENCE OFFICER SPOCK REPORTS  'SENSORS SHOW NO ENEMY SHIPS");
+              this.print("                                IN THIS QUADRANT'");
+              return;
+          }
+          this.print("FROM ENTERPRISE TO KLINGON BATTLE CRUISER(S)");
+          for (const k of this.localKlingons) {
+              this.printDistDir(this.sectX, this.sectY, k.x, k.y);
+          }
+      } else if (val === '3') {
+          // Starbase Nav Data
+          if (this.localStarbases.length === 0) {
+              this.print("MR. SPOCK REPORTS,  'SENSORS SHOW NO STARBASES IN THIS");
+              this.print(" QUADRANT.'");
+              return;
+          }
+          this.print("FROM ENTERPRISE TO STARBASE:");
+          for (const b of this.localStarbases) {
+              this.printDistDir(this.sectX, this.sectY, b.x, b.y);
+          }
+      } else if (val === '4') {
+          // Direction/Distance Calculator
+          this.print("DIRECTION/DISTANCE CALCULATOR:");
+          this.print(`YOU ARE AT QUADRANT ${this.quadX + 1},${this.quadY + 1} SECTOR ${this.sectX + 1},${this.sectY + 1}`);
+          this.prompt("PLEASE ENTER INITIAL COORDINATES (X,Y)", (initStr) => {
+              const [ix, iy] = initStr.split(',').map(s => parseFloat(s) - 1); 
+              this.prompt("PLEASE ENTER FINAL COORDINATES (X,Y)", (finalStr) => {
+                  const [fx, fy] = finalStr.split(',').map(s => parseFloat(s) - 1);
+                  if (isNaN(ix) || isNaN(iy) || isNaN(fx) || isNaN(fy)) {
+                      this.print("INVALID COORDINATES");
+                      return;
+                  }
+                  this.printDistDir(ix, iy, fx, fy);
+              });
+          });
+      } else if (val === '5') {
+          // Galaxy Region Name Map
+          this.print("                        THE GALAXY");
+          this.print("       1     2     3     4     5     6     7     8");
+          this.print("     ----- ----- ----- ----- ----- ----- ----- -----");
+          for (let i = 0; i < 8; i++) {
+               let line = `${i+1}  `;
+               for (let j = 0; j < 8; j++) {
+                   const name = this.getRegionName(j, i);
+                   line += `   ${name.substring(0, 3).padEnd(3, ' ')}`; 
+               }
+               this.print(line);
+          }
+      }
+  }
+
   private commandComputer() {
       if (this.damage[7] < 0) {
           this.print("COMPUTER DISABLED");
@@ -700,36 +798,55 @@ export class StarTrekGame {
       this.print("FUNCTIONS AVAILABLE FROM LIBRARY-COMPUTER:");
       this.print("   0 = CUMULATIVE GALACTIC RECORD");
       this.print("   1 = STATUS REPORT");
-      this.print("   2 = PHOTON TORPEDO DATA"); // Not implementing all calculator features yet
+      this.print("   2 = PHOTON TORPEDO DATA"); 
       this.print("   3 = STARBASE NAV DATA");
       this.print("   4 = DIRECTION/DISTANCE CALCULATOR");
+      this.print("   5 = GALAXY 'REGION NAME' MAP");
       
       this.prompt("COMPUTER ACTIVE AND AWAITING COMMAND", (val) => {
-          if (val === '0') {
-               // Galaxy Map
-               this.print("COMPUTER RECORD OF GALAXY");
-               this.print("       1     2     3     4     5     6     7     8");
-               this.print("     ----- ----- ----- ----- ----- ----- ----- -----");
-               for (let i = 0; i < 8; i++) {
-                   let line = `${i+1}  `;
-                   for (let j = 0; j < 8; j++) {
-                       if (this.knownGalaxy[j][i] !== 0) {
-                           line += `   ${this.knownGalaxy[j][i].toString().padStart(3, '0')}`;
-                       } else {
-                           line += "   ***";
-                       }
-                   }
-                   this.print(line);
-               }
-          } else if (val === '1') {
-              this.print("   STATUS REPORT:");
-              this.print(`KLINGONS LEFT: ${this.totalKlingons}`);
-              this.print(`MISSION MUST BE COMPLETED IN ${Math.floor((this.stardateEnd - this.stardate)*10)/10} STARDATES`);
-              this.print(`THE FEDERATION IS MAINTAINING ${this.totalStarbases} STARBASES IN THE GALAXY`);
-          } else {
-              this.print("FUNCTION NOT IMPLEMENTED YET");
-          }
+          this.executeComputer(val);
       });
+  }
+
+  private printDistDir(x1: number, y1: number, x2: number, y2: number) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      // Direction:
+      // 1=East(0), 3=North(-PI/2), 5=West(PI), 7=South(PI/2)
+      // Math.atan2(dy, dx) gives angle in radians from X+ axis.
+      // angle 0 -> East -> Course 1.
+      // angle -PI/2 -> North -> Course 3.
+      // angle PI -> West -> Course 5.
+      // angle PI/2 -> South -> Course 7.
+      // Formula: Course = 1 - angle / (PI/4).
+      // Check: 1 - (-PI/2)/(PI/4) = 1 - (-2) = 3. Correct.
+      // Check: 1 - (PI)/(PI/4) = 1 - 4 = -3 -> +8 = 5. Correct.
+      let angle = Math.atan2(dy, dx);
+      let course = 1 - angle / (Math.PI / 4);
+      if (course < 1) course += 8;
+      
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      this.print(`DIRECTION = ${course.toFixed(2)}`);
+      this.print(`DISTANCE = ${dist.toFixed(2)}`);
+  }
+
+  private getRegionName(x: number, y: number): string {
+      // x, y are 0-7. BASIC uses 1-8.
+      const row = y + 1;
+      const col = x + 1;
+      
+      const leftNames = [
+          "ANTARES", "RIGEL", "PROCYON", "VEGA", 
+          "CANOPUS", "ALTAIR", "SAGITTARIUS", "POLLUX"
+      ];
+      const rightNames = [
+          "SIRIUS", "DENEB", "CAPELLA", "BETELGEUSE", 
+          "ALDEBARAN", "REGULUS", "ARCTURUS", "SPICA"
+      ];
+      
+      if (col <= 4) return leftNames[row - 1] || "UNKNOWN";
+      return rightNames[row - 1] || "UNKNOWN";
   }
 
   // --- Game Mechanics ---

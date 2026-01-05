@@ -9,24 +9,26 @@ interface ModernInterfaceProps {
 }
 
 export default function ModernInterface({ game }: ModernInterfaceProps) {
-    // We need to force re-renders when game state changes, as the game object mutates
     const [tick, setTick] = useState(0);
     const [logs, setLogs] = useState<Line[]>([]);
     
     // UI State
     const [viewState, setViewState] = useState(game.getSectorData());
     const [animatingShip, setAnimatingShip] = useState<{x: number, y: number} | null>(null);
-    const [overlay, setOverlay] = useState<'LRS' | 'MAP' | null>(null);
+    const [overlay, setOverlay] = useState<'LRS' | 'MAP' | 'STATUS' | null>(null);
 
     // Command State
     const [navMode, setNavMode] = useState(false);
     const [fireMode, setFireMode] = useState<'PHA' | 'TOR' | null>(null);
     const [shieldMode, setShieldMode] = useState(false);
+    const [computerMode, setComputerMode] = useState(false);
     
     // Inputs
     const [warpFactor, setWarpFactor] = useState(1);
     const [phaserEnergy, setPhaserEnergy] = useState(100);
     const [shieldEnergy, setShieldEnergy] = useState(100);
+
+    const logsEndRef = useRef<HTMLDivElement>(null);
 
     const refresh = () => {
         setTick(t => t + 1);
@@ -37,6 +39,10 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     useEffect(() => {
         refresh();
     }, []);
+
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [logs]);
 
     const exec = (action: () => void) => {
         action();
@@ -51,9 +57,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
          const startY = viewState.y;
          const startTime = performance.now();
          const duration = 500;
-
          setNavMode(false);
-
          const loop = (time: number) => {
              const elapsed = time - startTime;
              const progress = Math.min(1, elapsed / duration);
@@ -88,6 +92,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     };
 
     const damageReport = game.getDamageReport();
+    const missionStats = game.getMissionStats();
 
     const renderGrid = () => {
         const grid = [];
@@ -97,7 +102,6 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                 let content = null;
                 let bgClass = "bg-gray-900 border-gray-800";
                 const isShip = !animatingShip && x === entities.x && y === entities.y;
-                
                 if (isShip) {
                     content = <div className="w-full h-full bg-blue-500 rounded-full border-2 border-white shadow-[0_0_10px_rgba(59,130,246,0.8)]" title="Enterprise"></div>;
                 } else if (entities.klingons.some(k => k.x === x && k.y === y)) {
@@ -107,7 +111,6 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                 } else if (entities.stars.some(s => s.x === x && s.y === y)) {
                     content = <div className="w-2 h-2 bg-yellow-200 rounded-full shadow-[0_0_5px_rgba(253,224,71,0.8)]" title="Star"></div>;
                 }
-
                 const handleClick = () => {
                     if (navMode) {
                         const dx = x - entities.x;
@@ -130,10 +133,8 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                          exec(() => game.executeTorpedo(course));
                     }
                 };
-                
                 let cursor = 'cursor-default';
                 if (navMode || fireMode === 'TOR') cursor = 'cursor-crosshair hover:bg-white/10';
-
                 grid.push(
                     <div key={`${x},${y}`} className={`w-full aspect-square border flex items-center justify-center ${bgClass} ${cursor}`} onClick={handleClick}>
                         {content}
@@ -155,6 +156,30 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel */}
                 <div className="w-1/4 bg-slate-900/50 p-4 border-r border-slate-800 flex flex-col gap-6 overflow-y-auto">
+                    {/* Mission Status */}
+                    <div className="space-y-4">
+                        <h2 className="text-sm uppercase tracking-widest text-slate-500 font-bold">Mission Status</h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-800/50 p-2 rounded border border-slate-700">
+                                <div className="text-[10px] text-slate-400 uppercase">Klingons</div>
+                                <div className="text-xl font-mono text-red-500 font-bold">{missionStats.klingonsLeft}</div>
+                            </div>
+                            <div className="bg-slate-800/50 p-2 rounded border border-slate-700">
+                                <div className="text-[10px] text-slate-400 uppercase">Days Left</div>
+                                <div className="text-xl font-mono text-yellow-500 font-bold">{missionStats.daysLeft}</div>
+                            </div>
+                            <div className="bg-slate-800/50 p-2 rounded border border-slate-700">
+                                <div className="text-[10px] text-slate-400 uppercase">Starbases</div>
+                                <div className="text-xl font-mono text-green-500 font-bold">{missionStats.starbases}</div>
+                            </div>
+                            <div className="bg-slate-800/50 p-2 rounded border border-slate-700 flex items-center justify-center">
+                                <div className={`text-sm font-bold uppercase ${missionStats.condition === '*RED*' ? 'text-red-600 animate-pulse' : missionStats.condition === 'YELLOW' ? 'text-yellow-500' : 'text-green-500'}`}>
+                                    {missionStats.condition}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
                         <h2 className="text-sm uppercase tracking-widest text-slate-500 font-bold">Systems Status</h2>
                         <div className="space-y-1">
@@ -203,17 +228,64 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
                             {renderGrid()}
                         </div>
-                        
                         {animatingShip && (
-                             <div 
-                                className="absolute w-[12.5%] h-[12.5%] pointer-events-none transition-none z-20 flex items-center justify-center"
-                                style={{ left: `${(animatingShip.x / 8) * 100}%`, top: `${(animatingShip.y / 8) * 100}%` }}
-                             >
+                             <div className="absolute w-[12.5%] h-[12.5%] pointer-events-none transition-none z-20 flex items-center justify-center" style={{ left: `${(animatingShip.x / 8) * 100}%`, top: `${(animatingShip.y / 8) * 100}%` }}>
                                 <div className="w-[90%] h-[90%] bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
                              </div>
                         )}
+                        
+                        {overlay === 'STATUS' && (
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto">
+                                <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2">Status Report</h3>
+                                
+                                <div className="grid grid-cols-2 gap-8 mb-8">
+                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                                        <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Mission Objectives</h4>
+                                        <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
+                                            <span className="text-sm text-slate-300">Klingons Remaining</span>
+                                            <span className="text-2xl font-mono text-red-500 font-bold">{missionStats.klingonsLeft}</span>
+                                        </div>
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-sm text-slate-300">Days Left</span>
+                                            <span className="text-2xl font-mono text-yellow-500 font-bold">{missionStats.daysLeft}</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                                        <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Logistics</h4>
+                                        <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
+                                            <span className="text-sm text-slate-300">Starbases</span>
+                                            <span className="text-xl font-mono text-green-500 font-bold">{missionStats.starbases}</span>
+                                        </div>
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-sm text-slate-300">Alert Condition</span>
+                                            <span className={`text-xl font-bold uppercase ${missionStats.condition === '*RED*' ? 'text-red-600 animate-pulse' : missionStats.condition === 'YELLOW' ? 'text-yellow-500' : 'text-green-500'}`}>
+                                                {missionStats.condition}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* Overlays */}
+                                <h4 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Damage Control Report</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {damageReport.map((sys, i) => (
+                                        <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded border border-slate-800">
+                                            <span className={`text-xs font-bold ${sys.value < 0 ? 'text-red-400' : 'text-slate-300'}`}>{sys.name}</span>
+                                            {sys.value < 0 ? (
+                                                <div className="text-right">
+                                                    <div className="text-xs text-red-500 font-bold uppercase">Damaged</div>
+                                                    <div className="text-[10px] text-slate-500">Rep in {Math.abs(sys.value).toFixed(1)} days</div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-green-500 font-bold uppercase">Operational</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button onClick={() => setOverlay(null)} className="mt-auto bg-slate-800 px-6 py-3 rounded hover:bg-slate-700 text-white font-bold tracking-widest w-full border border-slate-600">CLOSE REPORT</button>
+                            </div>
+                        )}
+
                         {overlay === 'LRS' && (
                             <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-8">
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Long Range Sensors</h3>
@@ -228,21 +300,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                 <button onClick={() => setOverlay(null)} className="mt-8 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
                         )}
-
                         {overlay === 'MAP' && (
                             <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-4">
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Galactic Map</h3>
                                 <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[500px] aspect-square">
                                     {game.getGalaxyMap().map((col, x) => col.map((val, y) => (
-                                        // Wait, getGalaxyMap returns col-first or row-first?
-                                        // StarTrekGame uses galaxy[x][y]. getGalaxyMap returns [col][row].
-                                        // So we need to index [x][y].
-                                        <div key={`${x},${y}`} 
-                                            className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono
-                                                ${x === game.quadX && y === game.quadY ? 'bg-blue-900/40 text-blue-200' : 'bg-slate-900/40 text-slate-500'}
-                                            `}
-                                            style={{ gridColumn: x + 1, gridRow: y + 1 }}
-                                        >
+                                        <div key={`${x},${y}`} className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono ${x === game.quadX && y === game.quadY ? 'bg-blue-900/40 text-blue-200' : 'bg-slate-900/40 text-slate-500'}`} style={{ gridColumn: x + 1, gridRow: y + 1 }}>
                                             {val === 0 ? '???' : val.toString().padStart(3, '0')}
                                         </div>
                                     )))}
@@ -256,22 +319,23 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                 {/* Right Panel */}
                 <div className="w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); }}
+                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${navMode ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700 text-blue-400'}`}>NAV</button>
-                        <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); }}
+                        <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${shieldMode ? 'bg-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-blue-300'}`}>SHIELDS</button>
-                        <button onClick={() => { setFireMode(fireMode === 'PHA' ? null : 'PHA'); setNavMode(false); setShieldMode(false); }}
+                        <button onClick={() => { setFireMode(fireMode === 'PHA' ? null : 'PHA'); setNavMode(false); setShieldMode(false); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'PHA' ? 'bg-orange-600' : 'bg-slate-800 hover:bg-slate-700 text-orange-400'}`}>PHASERS</button>
-                        <button onClick={() => { setFireMode(fireMode === 'TOR' ? null : 'TOR'); setNavMode(false); setShieldMode(false); }}
+                        <button onClick={() => { setFireMode(fireMode === 'TOR' ? null : 'TOR'); setNavMode(false); setShieldMode(false); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${fireMode === 'TOR' ? 'bg-red-600' : 'bg-slate-800 hover:bg-slate-700 text-red-400'}`}>TORPEDO</button>
                         
-                        <button onClick={() => { exec(() => {}); }} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-green-500">SRS (REFRESH)</button>
+                        <button onClick={() => { setComputerMode(!computerMode); setNavMode(false); setFireMode(null); setShieldMode(false); }}
+                            className={`p-2 rounded font-bold text-xs transition-colors ${computerMode ? 'bg-purple-600' : 'bg-slate-800 hover:bg-slate-700 text-purple-400'}`}>COMPUTER</button>
                         <button onClick={() => setOverlay('LRS')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-green-400">LRS SCAN</button>
                         <button onClick={() => setOverlay('MAP')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-purple-400">GALAXY MAP</button>
                         <button onClick={() => { if(confirm('Resign command?')) exec(() => game.processInput('XXX')) }} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-gray-500">RESIGN</button>
                     </div>
 
-                    <div className="bg-slate-800 p-4 rounded-lg min-h-[120px] flex flex-col justify-center">
+                    <div className="bg-slate-800 p-4 rounded-lg min-h-[150px] flex flex-col justify-center">
                         {navMode && (
                             <div className="space-y-4">
                                 <label className="block text-xs font-bold uppercase text-slate-400 text-center">Warp Factor: {warpFactor}</label>
@@ -281,76 +345,52 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         {shieldMode && (
                             <div className="space-y-4">
                                 <label className="block text-xs font-bold uppercase text-slate-400 text-center">Deflector Control</label>
-                                
-                                {/* Energy Balance Visualization */}
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
                                         <span className="text-yellow-500">Ship: {Math.floor(game.energy + game.shields - shieldEnergy)}</span>
                                         <span className="text-blue-500">Shields: {shieldEnergy}</span>
                                     </div>
                                     <div className="relative h-6 bg-slate-900 rounded overflow-hidden border border-slate-700 flex">
-                                        {/* Ship Energy Bar */}
-                                        <div 
-                                            className="h-full bg-yellow-500/50 transition-all duration-75" 
-                                            style={{width: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}
-                                        ></div>
-                                        {/* Shield Energy Bar */}
-                                        <div 
-                                            className="h-full bg-blue-500/50 transition-all duration-75"
-                                            style={{width: `${(shieldEnergy / (game.energy + game.shields)) * 100}%`}}
-                                        ></div>
-                                        
-                                        {/* Slider Input Overlay */}
-                                        <input 
-                                            type="range" 
-                                            min="0" 
-                                            max={game.energy + game.shields} 
-                                            value={shieldEnergy} 
-                                            onChange={(e) => setShieldEnergy(parseInt(e.target.value))}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
-                                            title="Drag to balance energy"
-                                        />
-                                        
-                                        {/* Visual Thumb Marker (calculated position) */}
-                                        <div 
-                                            className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75"
-                                            style={{left: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}
-                                        ></div>
+                                        <div className="h-full bg-yellow-500/50 transition-all duration-75" style={{width: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}></div>
+                                        <div className="h-full bg-blue-500/50 transition-all duration-75" style={{width: `${(shieldEnergy / (game.energy + game.shields)) * 100}%`}}></div>
+                                        <input type="range" min="0" max={game.energy + game.shields} value={shieldEnergy} onChange={(e) => setShieldEnergy(parseInt(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"/>
+                                        <div className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75" style={{left: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}></div>
                                     </div>
                                 </div>
-
-                                {/* Quick Sets */}
                                 <div className="grid grid-cols-4 gap-1">
                                     <button onClick={() => setShieldEnergy(0)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">0</button>
                                     <button onClick={() => setShieldEnergy(500)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">500</button>
                                     <button onClick={() => setShieldEnergy(1000)} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">1000</button>
                                     <button onClick={() => setShieldEnergy(Math.floor(game.energy + game.shields))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">MAX</button>
                                 </div>
-
-                                <button 
-                                    onClick={() => exec(() => game.executeShields(shieldEnergy))}
-                                    className="w-full bg-blue-600 py-2 rounded text-xs font-bold hover:bg-blue-500 shadow-lg"
-                                >
-                                    TRANSFER POWER
-                                </button>
+                                <button onClick={() => exec(() => game.executeShields(shieldEnergy))} className="w-full bg-blue-600 py-2 rounded text-xs font-bold hover:bg-blue-500 shadow-lg">TRANSFER POWER</button>
                             </div>
                         )}
                         {fireMode === 'PHA' && (
                             <div className="space-y-2">
                                 <label className="block text-xs font-bold uppercase text-slate-400">Phaser Energy</label>
                                 <div className="flex gap-2">
-                                    <input type="number" value={phaserEnergy} onChange={(e) => setPhaserEnergy(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-right text-xs"/>
+                                    <input type="number" value={phaserEnergy} onChange={(e) => setPhaserEnergy(parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded p-1 text-right text-xs text-white"/>
                                     <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="bg-orange-600 px-2 rounded text-xs font-bold">FIRE</button>
                                 </div>
                             </div>
                         )}
-                        {!navMode && !fireMode && !shieldMode && <div className="text-center text-slate-500 italic text-xs">Ready for orders...</div>}
+                        {computerMode && (
+                            <div className="grid grid-cols-1 gap-1">
+                                <button onClick={() => exec(() => game.executeComputer('1'))} className="bg-slate-700 text-[10px] py-2 rounded hover:bg-slate-600 text-slate-200">STATUS REPORT (LOG)</button>
+                                <button onClick={() => exec(() => game.executeComputer('2'))} className="bg-slate-700 text-[10px] py-2 rounded hover:bg-slate-600 text-slate-200">TORPEDO DATA</button>
+                                <button onClick={() => exec(() => game.executeComputer('3'))} className="bg-slate-700 text-[10px] py-2 rounded hover:bg-slate-600 text-slate-200">STARBASE NAV</button>
+                                <button onClick={() => exec(() => game.executeComputer('5'))} className="bg-slate-700 text-[10px] py-2 rounded hover:bg-slate-600 text-slate-200">REGION NAMES</button>
+                            </div>
+                        )}
+                        {!navMode && !fireMode && !shieldMode && !computerMode && <div className="text-center text-slate-500 italic text-xs">Ready for orders...</div>}
                     </div>
 
                     <div className="flex-1 bg-black p-2 font-mono text-[10px] overflow-y-auto text-green-500 rounded border border-slate-800">
-                        {logs.slice().reverse().map((line, i) => (
+                        {logs.map((line, i) => (
                             <div key={i} className="whitespace-pre-wrap mb-1 border-b border-green-900/20 pb-1">{line.text}</div>
                         ))}
+                        <div ref={logsEndRef} />
                     </div>
                 </div>
             </div>
