@@ -20,15 +20,14 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
   useEffect(() => {
     if (!gameRef.current) {
       gameRef.current = gameInstance || new StarTrekGame();
-      // Flush initial output
-      // If sharing instance, it might already have output or state.
-      // We should append any existing buffer? Or just start fresh log?
-      // Let's grab whatever is in buffer.
-      setLines(prev => [...prev, ...gameRef.current!.getOutput()]);
+      // Load existing history
+      setLines(gameRef.current.getFullLog());
+      // Flush any pending output
+      gameRef.current.getOutput(); 
     } else if (gameInstance && gameRef.current !== gameInstance) {
-        // Handle prop change if needed, though usually stable
         gameRef.current = gameInstance;
-        setLines(prev => [...prev, ...gameRef.current!.getOutput()]);
+        setLines(gameRef.current.getFullLog());
+        gameRef.current.getOutput();
     }
   }, [gameInstance]);
 

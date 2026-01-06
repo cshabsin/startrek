@@ -13,7 +13,8 @@ export class StarTrekGame {
   
   // Game State
   public state: GameState = 'INIT';
-  private outputBuffer: Line[] = [];
+  private pendingBuffer: Line[] = [];
+  private fullLog: Line[] = [];
   
   // Ship Systems
   public energy: number = 3000;
@@ -65,20 +66,27 @@ export class StarTrekGame {
   }
 
   private print(text: string) {
-    this.outputBuffer.push({ text });
+    const line = { text };
+    this.pendingBuffer.push(line);
+    this.fullLog.push(line);
   }
 
   public getOutput(): Line[] {
-    const out = [...this.outputBuffer];
-    this.outputBuffer = [];
+    const out = [...this.pendingBuffer];
+    this.pendingBuffer = [];
     return out;
+  }
+
+  public getFullLog(): Line[] {
+    return [...this.fullLog];
   }
 
   // --- Initialization ---
   
   public init() {
     this.state = 'COMMAND';
-    this.outputBuffer = [];
+    this.pendingBuffer = [];
+    this.fullLog = [];
     this.energy = 3000;
     this.torpedoes = 10;
     this.shields = 0;
@@ -96,6 +104,9 @@ export class StarTrekGame {
     this.knownGalaxy = [];
     this.totalKlingons = 0;
     this.totalStarbases = 0;
+    this.localKlingons = [];
+    this.localStarbases = [];
+    this.localStars = [];
     
     // Position Enterprise
     this.quadX = Math.floor(Math.random() * 8);
@@ -419,6 +430,21 @@ export class StarTrekGame {
     return this.knownGalaxy.map(col => [...col]);
   }
 
+    public executeRest(days: number) {
+      if (days <= 0) return;
+      
+      this.stardate += days;
+      if (this.stardate > this.stardateEnd) {
+          this.gameOver();
+          return;
+      }
+      
+      this.repairSystem(days);
+      this.klingonsMoveAndFire();
+      this.print(`--- RESTING FOR ${days.toFixed(1)} STARDATES ---`);
+      this.printShortRangeScan(true); // Silent update
+  }
+
   public executeNav(course: number, warp: number, suppressLogs: boolean = false) {
         if (isNaN(course) || course < 1 || course >= 9) {
             this.print("   LT. SULU REPORTS, 'INCORRECT COURSE DATA, SIR!'");
@@ -441,7 +467,15 @@ export class StarTrekGame {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle); 
         
-        const energyRequired = Math.floor(warp * warp * warp * 10 + 10); 
+        // Basic movement logic: N = INT(W1 * 8 + 0.5)
+        const numSectors = Math.floor(warp * 8 + 0.5);
+        if (numSectors < 1 && warp > 0) {
+            // Ensure we move at least one sector if warp is set
+            // (Unless we want to allow micro-moves that don't change sector yet)
+            // But for playability, let's follow BASIC.
+        }
+
+        const energyRequired = numSectors + 10; // Simple cost
         if (this.energy < energyRequired) {
              this.print("ENGINEERING REPORTS   'INSUFFICIENT ENERGY AVAILABLE");
              this.print(`                       FOR MANEUVERING AT WARP ${warp}!'`);
@@ -462,23 +496,20 @@ export class StarTrekGame {
         let globalX = this.quadX * 8 + this.sectX;
         let globalY = this.quadY * 8 + this.sectY;
         
-        const moveDist = warp * 8 * timeSpent; 
-        
-        const steps = Math.floor(warp * 8);
-        const stepX = dx * moveDist / steps;
-        const stepY = dy * moveDist / steps;
-        
         let lastSectX = this.sectX;
         let lastSectY = this.sectY;
         let collision = false;
 
-        for (let i = 0; i < steps; i++) {
-            globalX += stepX;
-            globalY += stepY;
+        // Move sector by sector to check for collisions
+        for (let i = 0; i < numSectors; i++) {
+            globalX += dx;
+            globalY += dy;
             
             // Local collision check
             const currentQX = Math.floor(globalX / 8);
             const currentQY = Math.floor(globalY / 8);
+            
+            // If still in same quadrant, check for objects
             if (currentQX === this.quadX && currentQY === this.quadY) {
                 const sx = Math.floor(globalX % 8);
                 const sy = Math.floor(globalY % 8);
@@ -491,8 +522,8 @@ export class StarTrekGame {
                     
                     if (isOccupied) {
                         this.print(`WARP ENGINES SHUT DOWN AT SECTOR ${sx+1},${sy+1} DUE TO BAD NAVIGATION`);
-                        globalX -= stepX;
-                        globalY -= stepY;
+                        globalX -= dx;
+                        globalY -= dy;
                         collision = true;
                         break;
                     }
@@ -617,15 +648,15 @@ export class StarTrekGame {
   public executeTorpedo(course: number) {
      if (this.torpedoes <= 0) {
          this.print("ALL PHOTON TORPEDOES EXPENDED");
-         return;
+         return null;
      }
      if (this.damage[4] < 0) {
          this.print("PHOTON TUBES ARE NOT OPERATIONAL");
-         return;
+         return null;
      }
      if (isNaN(course) || course < 1 || course >= 9) {
              this.print("ENSIGN CHEKOV REPORTS,  'INCORRECT COURSE DATA, SIR!'");
-             return;
+             return null;
      }
         
      this.energy -= 2;
@@ -640,6 +671,7 @@ export class StarTrekGame {
      let tx = this.sectX;
      let ty = this.sectY;
      let hit = false;
+     const path: {x: number, y: number}[] = [];
         
      for (let step = 0; step < 10; step++) { 
             tx += dx;
@@ -652,6 +684,7 @@ export class StarTrekGame {
                 break;
             }
             
+            path.push({x: rx, y: ry});
             this.print(`               ${rx+1},${ry+1}`);
             
             const kIdx = this.localKlingons.findIndex(k => k.x === rx && k.y === ry);
@@ -686,6 +719,7 @@ export class StarTrekGame {
      }
         
      this.klingonsMoveAndFire();
+     return path;
   }
 
   private commandTorpedo() {
@@ -928,12 +962,13 @@ export class StarTrekGame {
   // --- Game Mechanics ---
 
   private klingonsMoveAndFire() {
-      if (this.localKlingons.length === 0) return;
+      if (this.state === 'ENDED' || this.localKlingons.length === 0) return;
       
       // Klingon Turn
       // Move? BASIC line 2590 just fires. It says "KLINGONS MOVE/FIRE" but code mainly fires.
       
       for (const k of this.localKlingons) {
+          if (this.state === 'ENDED') break;
           const dist = Math.sqrt(Math.pow(k.x - this.sectX, 2) + Math.pow(k.y - this.sectY, 2));
           // Hit energy
           const hit = Math.floor((k.energy / dist) * (2 + Math.random()));
@@ -944,7 +979,7 @@ export class StarTrekGame {
           if (this.shields < 0) {
                this.print("      <SHIELDS DOWN TO 0 UNITS>"); // Or negative
                this.gameOver();
-               return;
+               break;
           } else {
               this.print(`      <SHIELDS DOWN TO ${Math.floor(this.shields)} UNITS>`);
           }
@@ -952,6 +987,7 @@ export class StarTrekGame {
   }
   
   private repairSystem(time: number) {
+      if (this.state === 'ENDED') return;
       // BASIC repairs devices over time
       for (let i = 0; i < 8; i++) {
           if (this.damage[i] < 0) {
@@ -965,6 +1001,7 @@ export class StarTrekGame {
       }
       
       // Random damage (Ship system failures)
+      if (this.state === 'ENDED') return;
       if (Math.random() > 0.9) {
           const dev = Math.floor(Math.random() * 8);
           this.damage[dev] -= (Math.random() * 5 + 1);

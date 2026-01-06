@@ -14,6 +14,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     // UI State
     const [viewState, setViewState] = useState(game.getSectorData());
     const [animatingShip, setAnimatingShip] = useState<{x: number, y: number} | null>(null);
+    const [animatingTorpedo, setAnimatingTorpedo] = useState<{x: number, y: number} | null>(null);
     const [overlay, setOverlay] = useState<'LRS' | 'MAP' | 'STATUS' | null>(null);
 
     // Command State
@@ -33,7 +34,9 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
 
     const refresh = () => {
         setTick(t => t + 1);
-        setLogs(game.getOutput());
+        setLogs(game.getFullLog());
+        // Clear pending buffer so we don't double count if getOutput is called elsewhere
+        game.getOutput(); 
         setViewState(game.getSectorData());
     };
 
@@ -84,6 +87,26 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
          requestAnimationFrame(loop);
     };
 
+    const animateTorpedo = (path: {x: number, y: number}[], onComplete: () => void) => {
+        let step = 0;
+        const interval = setInterval(() => {
+            if (step < path.length) {
+                setAnimatingTorpedo(path[step]);
+                step++;
+            } else {
+                clearInterval(interval);
+                setAnimatingTorpedo(null);
+                onComplete();
+            }
+            // If game ended (e.g. self-destruct via starbase), stop animation early
+            if (game.state === 'ENDED') {
+                clearInterval(interval);
+                setAnimatingTorpedo(null);
+                refresh();
+            }
+        }, 100);
+    };
+
     const handleNav = (course: number, warp: number) => {
         const oldQuadX = game.quadX;
         const oldQuadY = game.quadY;
@@ -91,6 +114,11 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         // Suppress logs for modern nav
         game.executeNav(course, warp, true);
         
+        if (game.state === 'ENDED') {
+            refresh();
+            return;
+        }
+
         if (game.quadX !== oldQuadX || game.quadY !== oldQuadY) {
             refresh();
             setNavMode(false);
@@ -316,6 +344,18 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                 <div className="w-[90%] h-[90%] bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
                              </div>
                         )}
+
+                        {animatingTorpedo && (
+                             <div 
+                                className="absolute w-[12.5%] h-[12.5%] pointer-events-none transition-all duration-75 z-30 flex items-center justify-center"
+                                style={{ 
+                                    left: `${(animatingTorpedo.x / 8) * 100}%`, 
+                                    top: `${(animatingTorpedo.y / 8) * 100}%` 
+                                }}
+                             >
+                                <div className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_red] ring-2 ring-white/50"></div>
+                             </div>
+                        )}
                         
                         {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
@@ -439,6 +479,26 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 <button onClick={() => setOverlay(null)} className="mt-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
                         )}
+
+                        {game.state === 'ENDED' && (
+                            <div className="absolute inset-0 bg-red-950/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                <div className="text-red-500 text-6xl font-black mb-4 tracking-tighter">MISSION ENDED</div>
+                                <div className="bg-black/50 p-6 rounded border border-red-500/50 max-w-lg mb-8">
+                                    <div className="text-slate-200 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+                                        {logs.slice(-5).map(l => l.text).join('\n\n')}
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        game.init();
+                                        refresh();
+                                    }}
+                                    className="bg-white text-red-900 px-8 py-4 rounded font-black text-xl hover:bg-red-100 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                                >
+                                    COMMENCE NEW MISSION
+                                </button>
+                            </div>
+                        )}
                      </div>
                 </div>
 
@@ -471,6 +531,19 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs shadow-lg"
                                 >
                                     AUTHORIZE REPAIRS
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Rest / Repair in deep space */}
+                        {!game.dockStatus && damageReport.some(d => d.value < 0) && !navMode && !fireMode && !shieldMode && !computerMode && (
+                            <div className="mb-4 p-3 bg-green-900/20 border border-green-800 rounded text-center">
+                                <div className="text-[10px] text-green-400 uppercase font-bold mb-2">Deep Space Operations</div>
+                                <button 
+                                    onClick={() => exec(() => game.executeRest(0.5))}
+                                    className="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded text-xs shadow-lg"
+                                >
+                                    WAIT / REPAIR (0.5 DAYS)
                                 </button>
                             </div>
                         )}
@@ -586,7 +659,18 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 </div>
                                 
                                 <button 
-                                    onClick={() => targetCourse !== '' && exec(() => game.executeTorpedo(Number(targetCourse)))}
+                                    onClick={() => {
+                                        if (targetCourse !== '') {
+                                            const path = game.executeTorpedo(Number(targetCourse));
+                                            if (path) {
+                                                animateTorpedo(path, () => refresh());
+                                            } else {
+                                                refresh();
+                                            }
+                                            setFireMode(null);
+                                            setTargetCourse('');
+                                        }
+                                    }}
                                     disabled={targetCourse === ''}
                                     className={`w-full py-2 rounded text-xs font-bold shadow-lg ${targetCourse !== '' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
                                 >
