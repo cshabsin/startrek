@@ -308,7 +308,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md pr-48">
+            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md pr-72">
                 <h1 className="text-2xl font-bold tracking-wider text-blue-400 shrink-0">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
                 <div className="text-xl font-mono text-yellow-500 truncate ml-4">
                     STARDATE {game.stardate.toFixed(1)}
