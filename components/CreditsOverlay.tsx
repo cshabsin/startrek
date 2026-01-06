@@ -41,7 +41,10 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                                 <p className="text-2xl text-slate-200 font-serif">Original logic and design by <span className="text-white font-bold">Mike Mayfield</span>.</p>
                                 <p className="text-lg text-slate-400">Modified and published by <span className="text-slate-200">Dave Ahl</span> in "101 BASIC Computer Games".</p>
                                 <p className="text-lg text-slate-400">Major debug and enhancements by <span className="text-slate-200">Bob Leedom</span> (1974).</p>
-                                <p className="text-lg text-slate-400 font-mono">Converted to Microsoft 8K BASIC by John Gorders (1978).</p>
+                                <p className="text-lg text-slate-400 font-mono text-sm">Converted to Microsoft 8K BASIC by John Gorders (1978).</p>
+                                <p className="text-md text-slate-500 pt-2 italic">
+                                    Original source code retrieved from <a href="https://github.com/philspil66/Super-Star-Trek" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 transition-colors">philspil66/Super-Star-Trek</a>.
+                                </p>
                             </div>
                         </section>
 
