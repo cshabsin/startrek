@@ -187,22 +187,79 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         );
     };
 
+    const EnterpriseIcon = () => (
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
+            {/* Nacelles */}
+            <rect x="20" y="60" width="10" height="30" rx="2" fill="#3b82f6" />
+            <rect x="70" y="60" width="10" height="30" rx="2" fill="#3b82f6" />
+            {/* Pylons */}
+            <path d="M30 75 L50 65 M70 75 L50 65" stroke="#60a5fa" strokeWidth="4" />
+            {/* Secondary Hull */}
+            <ellipse cx="50" cy="70" rx="12" ry="20" fill="#94a3b8" />
+            {/* Saucer */}
+            <circle cx="50" cy="35" r="30" fill="#cbd5e1" stroke="#64748b" strokeWidth="1" />
+            <circle cx="50" cy="35" r="10" fill="#94a3b8" opacity="0.5" />
+            {/* Deflector */}
+            <circle cx="50" cy="60" r="4" fill="#fbbf24" />
+        </svg>
+    );
+
+    const KlingonIcon = () => (
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">
+            {/* Wings / Main Body */}
+            <path d="M10 70 L50 40 L90 70 L50 80 Z" fill="#166534" stroke="#14532d" strokeWidth="1" />
+            {/* Boom */}
+            <rect x="47" y="20" width="6" height="30" fill="#166534" />
+            {/* Bridge Head */}
+            <path d="M35 20 L50 5 L65 20 L50 25 Z" fill="#15803d" />
+            {/* Engine Glow */}
+            <rect x="40" y="75" width="20" height="3" fill="#ef4444" opacity="0.8" />
+        </svg>
+    );
+
+    const StarbaseIcon = () => (
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+            <path d="M50 5 L95 25 L95 75 L50 95 L5 75 L5 25 Z" fill="#064e3b" stroke="#22c55e" strokeWidth="2" />
+            <circle cx="50" cy="50" r="20" fill="#065f46" stroke="#4ade80" strokeWidth="1" />
+            <rect x="48" y="5" width="4" height="90" fill="#22c55e" opacity="0.3" />
+            <rect x="5" y="48" width="90" height="4" fill="#22c55e" opacity="0.3" />
+            {/* Lights */}
+            <circle cx="50" cy="20" r="2" fill="#facc15" />
+            <circle cx="50" cy="80" r="2" fill="#facc15" />
+            <circle cx="20" cy="50" r="2" fill="#facc15" />
+            <circle cx="80" cy="50" r="2" fill="#facc15" />
+        </svg>
+    );
+
+    const StarIcon = () => (
+        <svg viewBox="0 0 100 100" className="w-2 h-2 overflow-visible">
+            <defs>
+                <radialGradient id="starGrad">
+                    <stop offset="0%" stopColor="white" />
+                    <stop offset="100%" stopColor="rgba(253,224,71,0)" />
+                </radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="50" fill="url(#starGrad)" />
+            <path d="M50 0 L50 100 M0 50 L100 50" stroke="#fde047" strokeWidth="2" opacity="0.5" />
+        </svg>
+    );
+
     const renderGrid = () => {
         const grid = [];
         const entities = viewState;
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 let content = null;
-                const bgClass = "bg-gray-900 border-gray-800";
+                let bgClass = "bg-gray-900 border-gray-800";
                 const isShip = !animatingShip && x === entities.x && y === entities.y;
                 if (isShip) {
-                    content = <div className="w-full h-full bg-blue-500 rounded-full border-2 border-white shadow-[0_0_10px_rgba(59,130,246,0.8)]" title="Enterprise"></div>;
+                    content = <div className="w-[80%] h-[80%]"><EnterpriseIcon /></div>;
                 } else if (entities.klingons.some(k => k.x === x && k.y === y)) {
-                    content = <div className="w-0 h-0 border-l-[10px] border-l-transparent border-t-[15px] border-t-red-600 border-r-[10px] border-r-transparent animate-pulse" title="Klingon"></div>;
+                    content = <div className="w-[70%] h-[70%] animate-pulse"><KlingonIcon /></div>;
                 } else if (entities.starbases.some(b => b.x === x && b.y === y)) {
-                    content = <div className="w-full h-full bg-green-500" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} title="Starbase"></div>;
+                    content = <div className="w-[85%] h-[85%]"><StarbaseIcon /></div>;
                 } else if (entities.stars.some(s => s.x === x && s.y === y)) {
-                    content = <div className="w-2 h-2 bg-yellow-200 rounded-full shadow-[0_0_5px_rgba(253,224,71,0.8)]" title="Star"></div>;
+                    content = <StarIcon />;
                 }
                 const handleClick = () => {
                     const dx = x - entities.x;
@@ -341,7 +398,9 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         </div>
                         {animatingShip && (
                              <div className="absolute w-[12.5%] h-[12.5%] pointer-events-none transition-none z-20 flex items-center justify-center" style={{ left: `${(animatingShip.x / 8) * 100}%`, top: `${(animatingShip.y / 8) * 100}%` }}>
-                                <div className="w-[90%] h-[90%] bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
+                                <div className="w-[80%] h-[80%]">
+                                    <EnterpriseIcon />
+                                </div>
                              </div>
                         )}
 

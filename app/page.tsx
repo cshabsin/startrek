@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import GameTerminal from '@/components/GameTerminal';
 import ModernInterface from '@/components/ModernInterface';
+import CreditsOverlay from '@/components/CreditsOverlay';
 import { StarTrekGame } from '@/lib/startrek';
 import { ThemeType, THEMES } from '@/lib/themes';
 
@@ -11,6 +12,40 @@ export default function Home() {
   const [mode, setMode] = useState<'classic' | 'modern'>('classic');
   const [theme, setTheme] = useState<ThemeType>('TERMINAL');
   const [game, setGame] = useState<StarTrekGame | null>(null);
+  const [showCredits, setShowCredits] = useState(false);
+
+  // Handle URL Hash on Mount
+  useEffect(() => {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#modern') {
+      setMode('modern');
+    } else if (hash === '#c64') {
+      setMode('classic');
+      setTheme('C64');
+    } else if (hash === '#ti') {
+      setMode('classic');
+      setTheme('TI99');
+    } else if (hash === '#apple') {
+      setMode('classic');
+      setTheme('APPLE_II');
+    }
+  }, []);
+
+  // Sync URL Hash on state change
+  useEffect(() => {
+    let newHash = '';
+    if (mode === 'modern') {
+      newHash = '#modern';
+    } else {
+      if (theme === 'C64') newHash = '#c64';
+      else if (theme === 'TI99') newHash = '#ti';
+      else if (theme === 'APPLE_II') newHash = '#apple';
+      else newHash = '#classic';
+    }
+    if (window.location.hash !== newHash) {
+      window.history.replaceState(null, '', newHash);
+    }
+  }, [mode, theme]);
 
   useEffect(() => {
       // Use timeout to avoid immediate state set warning if StrictMode is on,
@@ -54,6 +89,12 @@ export default function Home() {
         >
             MODERN
         </button>
+        <button 
+            onClick={() => setShowCredits(true)}
+            className="px-3 py-1 rounded text-sm font-bold border bg-black text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+        >
+            CREDITS
+        </button>
       </div>
 
       {mode === 'classic' && game ? (
@@ -61,6 +102,8 @@ export default function Home() {
       ) : (
           game && <ModernInterface game={game} />
       )}
+
+      {showCredits && <CreditsOverlay onClose={() => setShowCredits(false)} />}
     </main>
   );
 }

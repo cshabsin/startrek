@@ -14,8 +14,14 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
   const [inputValue, setInputValue] = useState('');
   const gameRef = useRef<StarTrekGame | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const currentTheme = THEMES[theme];
+
+  // Auto-focus input on mount or when mode/theme changes
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [theme]);
 
   useEffect(() => {
     if (!gameRef.current) {
@@ -88,6 +94,7 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
       <form onSubmit={handleSubmit} className="flex">
         <span className="mr-2">{'>'}</span>
         <input
+          ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
