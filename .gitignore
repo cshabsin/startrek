@@ -40,4 +40,4 @@ next-env.d.ts
 
 # project specific
 gemini_commit_message.txt
-firebase-debug.log
+firebase-debug.log**/*.log
