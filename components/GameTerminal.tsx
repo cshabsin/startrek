@@ -73,24 +73,16 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
 
   return (
     <div
-        className={`flex flex-col h-screen p-4 overflow-hidden pt-12 ${currentTheme.className}`}
+        className={`flex flex-col h-full p-2 sm:p-4 overflow-hidden text-xs sm:text-base ${currentTheme.className}`}
         style={{
             ...currentTheme.style,
             fontFamily: currentTheme.fontVariable,
         }}
     >
-      <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto mb-2 sm:mb-4 custom-scrollbar">
         {lines.map((line, i) => (
           <div
             key={i}
-            // If line.color is set, usage might depend on if we want to override theme.
-            // 'cyan' was hardcoded. 'inherit' will use theme color.
-            // If line.color is 'cyan' (from legacy code), we might want to map it or let it be.
-            // But 'cyan' on TI99 background (Cyan) will be invisible.
-            // We should strip color or handle it.
-            // For now, let's use style color only if it's not 'inherit' and not clashing.
-            // Actually, let's just force theme color for main text, unless it's specific highlights.
-            // But the game logic sets colors like 'red' for alerts.
             style={{ color: line.color === 'inherit' ? undefined : line.color }}
             className="whitespace-pre-wrap leading-tight"
           >
@@ -100,7 +92,7 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
         <div ref={bottomRef} />
       </div>
       
-      <form onSubmit={handleSubmit} className="flex">
+      <form onSubmit={handleSubmit} className="flex items-center">
         <span className="mr-2">{'>'}</span>
         <input
           ref={inputRef}

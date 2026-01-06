@@ -62,13 +62,13 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-black relative">
-      <div className="absolute top-2 right-2 z-50 flex gap-2 items-center">
+    <main className="min-h-screen bg-black flex flex-col h-screen overflow-hidden">
+      <div className="flex gap-2 items-center justify-end p-2 flex-wrap shrink-0 border-b border-gray-800 bg-black z-50">
         {mode === 'classic' && (
           <select
             value={theme}
             onChange={(e) => setTheme(e.target.value as ThemeType)}
-            className="px-2 py-1 rounded text-sm font-bold border bg-black text-green-500 border-green-700 mr-4 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="px-2 py-1 rounded text-xs sm:text-sm font-bold border bg-black text-green-500 border-green-700 mr-2 sm:mr-4 focus:outline-none focus:ring-1 focus:ring-green-500"
           >
             {Object.keys(THEMES).map((key) => (
               <option key={key} value={key}>
@@ -79,29 +79,31 @@ export default function Home() {
         )}
         <button 
             onClick={() => setMode('classic')}
-            className={`px-3 py-1 rounded text-sm font-bold border ${mode === 'classic' ? 'bg-green-700 text-black border-green-500' : 'bg-black text-green-700 border-green-700'}`}
+            className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-bold border ${mode === 'classic' ? 'bg-green-700 text-black border-green-500' : 'bg-black text-green-700 border-green-700'}`}
         >
             CLASSIC
         </button>
         <button 
             onClick={() => setMode('modern')}
-            className={`px-3 py-1 rounded text-sm font-bold border ${mode === 'modern' ? 'bg-blue-600 text-white border-blue-400' : 'bg-black text-blue-600 border-blue-600'}`}
+            className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-bold border ${mode === 'modern' ? 'bg-blue-600 text-white border-blue-400' : 'bg-black text-blue-600 border-blue-600'}`}
         >
             MODERN
         </button>
         <button 
             onClick={() => setShowCredits(true)}
-            className="px-3 py-1 rounded text-sm font-bold border bg-black text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+            className="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-bold border bg-black text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
         >
             CREDITS
         </button>
       </div>
 
-      {mode === 'classic' && game ? (
-          <GameTerminal gameInstance={game} theme={theme} />
-      ) : (
-          game && <ModernInterface game={game} />
-      )}
+      <div className="flex-1 overflow-hidden relative">
+        {mode === 'classic' && game ? (
+            <GameTerminal gameInstance={game} theme={theme} />
+        ) : (
+            game && <ModernInterface game={game} />
+        )}
+      </div>
 
       {showCredits && <CreditsOverlay onClose={() => setShowCredits(false)} />}
     </main>
