@@ -79,11 +79,19 @@ The `StarTrekGame` class is a self-contained state machine. It handles the mathe
 
 ## Deployment
 
+### Manual Build
 To generate a static bundle for hosting (e.g., in a `public_html` directory):
 ```bash
 npm run build
 ```
 The resulting `out/` directory uses relative asset paths and can be hosted in any subdirectory.
+
+### Automatic Deployment (GitHub Pages)
+This repository is configured to automatically deploy to GitHub Pages via GitHub Actions. To enable this:
+1. Go to your repository on GitHub.
+2. Navigate to **Settings** > **Pages**.
+3. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+4. Every push to the `main` branch will now automatically build and update your live site.
 
 ---
 
