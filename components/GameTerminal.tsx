@@ -35,6 +35,15 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
         setLines(gameRef.current.getFullLog());
         gameRef.current.getOutput();
     }
+
+    // Subscribe to any updates (log prints) from the game instance
+    const listener = () => {
+        if (gameRef.current) {
+            setLines(gameRef.current.getFullLog());
+        }
+    };
+    gameRef.current.subscribe(listener);
+    return () => gameRef.current?.unsubscribe(listener);
   }, [gameInstance]);
 
   // Poll for output periodically if game is shared and modified elsewhere?

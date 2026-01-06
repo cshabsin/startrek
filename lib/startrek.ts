@@ -15,6 +15,7 @@ export class StarTrekGame {
   public state: GameState = 'INIT';
   private pendingBuffer: Line[] = [];
   private fullLog: Line[] = [];
+  private listeners: (() => void)[] = [];
   
   // Ship Systems
   public energy: number = 3000;
@@ -69,6 +70,19 @@ export class StarTrekGame {
     const line = { text };
     this.pendingBuffer.push(line);
     this.fullLog.push(line);
+    this.notify();
+  }
+
+  public subscribe(listener: () => void) {
+      this.listeners.push(listener);
+  }
+
+  public unsubscribe(listener: () => void) {
+      this.listeners = this.listeners.filter(l => l !== listener);
+  }
+
+  private notify() {
+      this.listeners.forEach(l => l());
   }
 
   public getOutput(): Line[] {

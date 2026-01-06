@@ -42,7 +42,11 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
 
     useEffect(() => {
         refresh();
-    }, []);
+        // Subscribe to game updates (e.g. log prints)
+        const listener = () => refresh();
+        game.subscribe(listener);
+        return () => game.unsubscribe(listener);
+    }, [game]);
 
     useEffect(() => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
