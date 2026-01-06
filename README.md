@@ -84,3 +84,11 @@ To generate a static bundle for hosting (e.g., in a `public_html` directory):
 npm run build
 ```
 The resulting `out/` directory uses relative asset paths and can be hosted in any subdirectory.
+
+---
+
+## Assets & Credits
+
+- **Game Engine:** Ported from the original 1978 "Super Star Trek" BASIC source code by Mike Mayfield, Dave Ahl, and Bob Leedom.
+- **Tactical Icons:** Custom SVG assets designed specifically for this project's Modern Mode.
+- **Classic Themes:** Retro styling inspired by the TI-99/4A, Commodore 64, and Apple II computing eras.
