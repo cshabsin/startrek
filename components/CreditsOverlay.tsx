@@ -48,8 +48,9 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                         <section>
                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Modern Web Implementation (2026)</h3>
                             <div className="space-y-4">
-                                <p className="text-xl text-slate-200">Built using <span className="text-blue-400">Next.js 15</span>, <span className="text-blue-400">TypeScript</span>, and <span className="text-blue-400">Tailwind CSS</span>.</p>
-                                <p className="text-lg text-slate-400 italic">Project initiated and developed as a collaborative engineering experiment with Gemini CLI.</p>
+                                <p className="text-xl text-slate-200">Developed by <span className="text-white font-bold text-2xl">Chris Shabsin</span>.</p>
+                                <p className="text-lg text-slate-400">Built using <span className="text-blue-400">Next.js 15</span>, <span className="text-blue-400">TypeScript</span>, and <span className="text-blue-400">Tailwind CSS</span>.</p>
+                                <p className="text-md text-slate-500 italic">Project initiated and developed as a collaborative engineering experiment with Gemini CLI.</p>
                             </div>
                         </section>
 
