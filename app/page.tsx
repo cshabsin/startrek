@@ -5,30 +5,35 @@ import { useState, useEffect } from 'react';
 import GameTerminal from '@/components/GameTerminal';
 import ModernInterface from '@/components/ModernInterface';
 import CreditsOverlay from '@/components/CreditsOverlay';
+import SourceCodeAnalysis from '@/components/SourceCodeAnalysis';
 import { StarTrekGame } from '@/lib/startrek';
 import { ThemeType, THEMES } from '@/lib/themes';
 
 export default function Home() {
-  const [mode, setMode] = useState<'classic' | 'modern'>('classic');
+  const [mode, setMode] = useState<'classic' | 'modern' | 'analysis'>('classic');
   const [theme, setTheme] = useState<ThemeType>('TERMINAL');
   const [game, setGame] = useState<StarTrekGame | null>(null);
   const [showCredits, setShowCredits] = useState(false);
 
   // Handle URL Hash on Mount
   useEffect(() => {
-    const hash = window.location.hash.toLowerCase();
-    if (hash === '#modern') {
-      setMode('modern');
-    } else if (hash === '#c64') {
-      setMode('classic');
-      setTheme('C64');
-    } else if (hash === '#ti') {
-      setMode('classic');
-      setTheme('TI99');
-    } else if (hash === '#apple') {
-      setMode('classic');
-      setTheme('APPLE_II');
-    }
+    // Wrap in timeout to avoid "synchronous state update in effect" warning
+    const timer = setTimeout(() => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#modern') {
+        setMode('modern');
+      } else if (hash === '#c64') {
+        setMode('classic');
+        setTheme('C64');
+      } else if (hash === '#ti') {
+        setMode('classic');
+        setTheme('TI99');
+      } else if (hash === '#apple') {
+        setMode('classic');
+        setTheme('APPLE_II');
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Sync URL Hash on state change
@@ -89,6 +94,12 @@ export default function Home() {
         >
             MODERN
         </button>
+        <button
+            onClick={() => setMode('analysis')}
+            className={`px-3 py-1 rounded text-sm font-bold border ${mode === 'analysis' ? 'bg-purple-600 text-white border-purple-400' : 'bg-black text-purple-600 border-purple-600'}`}
+        >
+            SOURCE
+        </button>
         <button 
             onClick={() => setShowCredits(true)}
             className="px-3 py-1 rounded text-sm font-bold border bg-black text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
@@ -99,9 +110,11 @@ export default function Home() {
 
       {mode === 'classic' && game ? (
           <GameTerminal gameInstance={game} theme={theme} />
-      ) : (
-          game && <ModernInterface game={game} />
-      )}
+      ) : mode === 'modern' && game ? (
+          <ModernInterface game={game} />
+      ) : mode === 'analysis' ? (
+          <SourceCodeAnalysis />
+      ) : null}
 
       {showCredits && <CreditsOverlay onClose={() => setShowCredits(false)} />}
     </main>
