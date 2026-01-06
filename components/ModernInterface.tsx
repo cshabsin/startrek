@@ -312,7 +312,6 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                 <h1 className="text-2xl font-bold tracking-wider text-blue-400 shrink-0">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
                 <div className="text-xl font-mono text-yellow-500 truncate ml-4">
                     STARDATE {game.stardate.toFixed(1)}
-                    <span className="text-sm text-slate-500 ml-3">({missionStats.daysLeft} DAYS LEFT)</span>
                 </div>
             </div>
 
