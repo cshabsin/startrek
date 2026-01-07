@@ -241,17 +241,15 @@ export class StarTrekGame {
     this.knownGalaxy[this.quadX][this.quadY] = this.galaxy[this.quadX][this.quadY];
 
     const quadrantName = this.getRegionName(this.quadX, this.quadY);
-    if (!suppressLogs) {
-        this.print("");
-        if (this.stardate === this.stardateStart) {
-            this.print("YOUR MISSION BEGINS WITH YOUR STARSHIP LOCATED");
-            this.print(`IN THE GALACTIC QUADRANT, '${quadrantName}'.`);
-        } else {
-            this.print(`NOW ENTERING ${quadrantName} QUADRANT . . .`);
-        }
+    this.print("");
+    if (this.stardate === this.stardateStart) {
+        this.print("YOUR MISSION BEGINS WITH YOUR STARSHIP LOCATED");
+        this.print(`IN THE GALACTIC QUADRANT, '${quadrantName}'.`);
+    } else {
+        this.print(`NOW ENTERING ${quadrantName} QUADRANT . . .`);
     }
 
-    if (!suppressLogs && kCount > 0) {
+    if (kCount > 0) {
       this.print("");
       this.print("COMBAT AREA      CONDITION RED");
       if (this.shields <= 200) {
