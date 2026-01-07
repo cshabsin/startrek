@@ -57,16 +57,9 @@ export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameT
     e.preventDefault();
     if (!gameRef.current) return;
     
-    const cmd = inputValue; 
-    // We'll use the theme's text color for input echo instead of hardcoded cyan, or keep it distinct?
-    // Let's use a distinct color but compatible with theme.
-    // For now, let's just use the current color but maybe bold?
-    // The Line type has a color property.
-    setLines(prev => [...prev, { text: `> ${cmd}`, color: 'inherit' }]);
-    
-    gameRef.current.processInput(cmd);
-    const newLines = gameRef.current.getOutput();
-    setLines(prev => [...prev, ...newLines]);
+    gameRef.current.processInput(inputValue);
+    // Clear pending buffer so other views don't double count if they use getOutput
+    gameRef.current.getOutput(); 
     
     setInputValue('');
   };

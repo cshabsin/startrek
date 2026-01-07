@@ -265,8 +265,14 @@ export class StarTrekGame {
   // --- Input Processing ---
 
   public processInput(input: string) {
+    const originalInput = input;
     input = input.trim().toUpperCase();
     
+    // Echo input to log
+    const echoLine = { text: `> ${originalInput}`, color: 'inherit' };
+    this.fullLog.push(echoLine);
+    this.notify();
+
     if (this.inputCallback) {
       const cb = this.inputCallback;
       this.inputCallback = null;
