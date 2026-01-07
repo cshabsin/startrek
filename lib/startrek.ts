@@ -240,6 +240,17 @@ export class StarTrekGame {
     // Update known galaxy
     this.knownGalaxy[this.quadX][this.quadY] = this.galaxy[this.quadX][this.quadY];
 
+    const quadrantName = this.getRegionName(this.quadX, this.quadY);
+    if (!suppressLogs) {
+        this.print("");
+        if (this.stardate === this.stardateStart) {
+            this.print("YOUR MISSION BEGINS WITH YOUR STARSHIP LOCATED");
+            this.print(`IN THE GALACTIC QUADRANT, '${quadrantName}'.`);
+        } else {
+            this.print(`NOW ENTERING ${quadrantName} QUADRANT . . .`);
+        }
+    }
+
     if (!suppressLogs && kCount > 0) {
       this.print("");
       this.print("COMBAT AREA      CONDITION RED");
@@ -339,26 +350,31 @@ export class StarTrekGame {
     if (suppressLogs) return;
 
     this.print("---------------------------------");
-    for (let y = 0; y < 8; y++) {
+    for (let y = 0; y < 9; y++) {
       let line = "";
-      for (let x = 0; x < 8; x++) {
-        let symbol = "   ";
-        if (x === this.sectX && y === this.sectY) symbol = "<*>";
-        else if (this.localKlingons.some(k => k.x === x && k.y === y)) symbol = "+K+";
-        else if (this.localStarbases.some(b => b.x === x && b.y === y)) symbol = ">!<";
-        else if (this.localStars.some(s => s.x === x && s.y === y)) symbol = " * ";
-        line += symbol;
+      if (y < 8) {
+          for (let x = 0; x < 8; x++) {
+            let symbol = "   ";
+            if (x === this.sectX && y === this.sectY) symbol = "<*>";
+            else if (this.localKlingons.some(k => k.x === x && k.y === y)) symbol = "+K+";
+            else if (this.localStarbases.some(b => b.x === x && b.y === y)) symbol = ">!<";
+            else if (this.localStars.some(s => s.x === x && s.y === y)) symbol = " * ";
+            line += symbol;
+          }
+      } else {
+          line = " ".repeat(24);
       }
       // Append Status Info to the right
       let status = "";
       if (y === 0) status = `        STARDATE          ${Math.floor(this.stardate * 10) / 10}`;
       if (y === 1) status = `        CONDITION         ${this.getCondition()}`;
       if (y === 2) status = `        QUADRANT          ${this.quadX + 1},${this.quadY + 1}`;
-      if (y === 3) status = `        SECTOR            ${this.sectX + 1},${this.sectY + 1}`;
-      if (y === 4) status = `        PHOTON TORPEDOES  ${Math.floor(this.torpedoes)}`;
-      if (y === 5) status = `        TOTAL ENERGY      ${Math.floor(this.energy + this.shields)}`;
-      if (y === 6) status = `        SHIELDS           ${Math.floor(this.shields)}`;
-      if (y === 7) status = `        KLINGONS REMAINING ${this.totalKlingons}`;
+      if (y === 3) status = `        REGION            ${this.getRegionName(this.quadX, this.quadY)}`;
+      if (y === 4) status = `        SECTOR            ${this.sectX + 1},${this.sectY + 1}`;
+      if (y === 5) status = `        PHOTON TORPEDOES  ${Math.floor(this.torpedoes)}`;
+      if (y === 6) status = `        TOTAL ENERGY      ${Math.floor(this.energy + this.shields)}`;
+      if (y === 7) status = `        SHIELDS           ${Math.floor(this.shields)}`;
+      if (y === 8) status = `        KLINGONS REMAINING ${this.totalKlingons}`;
       
       this.print(line + status);
     }
@@ -906,7 +922,7 @@ export class StarTrekGame {
           for (let i = 0; i < 8; i++) {
                let line = `${i+1}  `;
                for (let j = 0; j < 8; j++) {
-                   const name = this.getRegionName(j, i);
+                   const name = this.getRegionName(j, i, false);
                    line += `   ${name.substring(0, 3).padEnd(3, ' ')}`; 
                }
                this.print(line);
@@ -955,7 +971,7 @@ export class StarTrekGame {
       this.print(`DISTANCE = ${dist.toFixed(2)}`);
   }
 
-  private getRegionName(x: number, y: number): string {
+  private getRegionName(x: number, y: number, includeRoman: boolean = true): string {
       // x, y are 0-7. BASIC uses 1-8.
       const row = y + 1;
       const col = x + 1;
@@ -969,8 +985,17 @@ export class StarTrekGame {
           "ALDEBARAN", "REGULUS", "ARCTURUS", "SPICA"
       ];
       
-      if (col <= 4) return leftNames[row - 1] || "UNKNOWN";
-      return rightNames[row - 1] || "UNKNOWN";
+      let name = "";
+      if (col <= 4) name = leftNames[row - 1] || "UNKNOWN";
+      else name = rightNames[row - 1] || "UNKNOWN";
+
+      if (includeRoman) {
+          const romans = ["I", "II", "III", "IV"];
+          const romanIdx = (col - 1) % 4;
+          name += " " + romans[romanIdx];
+      }
+
+      return name;
   }
 
   // --- Game Mechanics ---
