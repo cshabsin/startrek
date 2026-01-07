@@ -975,7 +975,7 @@ export class StarTrekGame {
       this.print(`DISTANCE = ${dist.toFixed(2)}`);
   }
 
-  private getRegionName(x: number, y: number, includeRoman: boolean = true): string {
+  public getRegionName(x: number, y: number, includeRoman: boolean = true): string {
       // x, y are 0-7. BASIC uses 1-8.
       const row = y + 1;
       const col = x + 1;

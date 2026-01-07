@@ -390,12 +390,17 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                      {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Enter Manual Course</div>}
                      {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Enter Manual Course</div>}
                      
-                     <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
-                        {/* Position Overlay */}
-                        <div className="absolute top-2 left-2 z-10 bg-black/50 text-[10px] text-slate-400 px-2 py-1 rounded border border-slate-700">
-                            Q: {game.quadX + 1},{game.quadY + 1} &nbsp; S: {game.sectX + 1},{game.sectY + 1}
+                     <div className="w-full max-w-[600px] mb-2 flex justify-between items-end px-1">
+                        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                            Region: <span className="text-blue-400">{game.getRegionName(game.quadX, game.quadY)}</span>
                         </div>
+                        <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                            Quadrant: <span className="text-slate-300">{game.quadX + 1},{game.quadY + 1}</span> &nbsp; 
+                            Sector: <span className="text-slate-300">{game.sectX + 1},{game.sectY + 1}</span>
+                        </div>
+                     </div>
 
+                     <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
                         <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
                             {renderGrid()}
                         </div>
