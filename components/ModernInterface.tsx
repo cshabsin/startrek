@@ -28,7 +28,6 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     const [targetCourse, setTargetCourse] = useState<number | ''>(''); // Allow empty for manual entry
     const [phaserEnergy, setPhaserEnergy] = useState(100);
     const [shieldEnergy, setShieldEnergy] = useState(100);
-    const [mobileTab, setMobileTab] = useState<'STATUS' | 'COMMAND' | 'LOGS'>('COMMAND');
 
     const logsEndRef = useRef<HTMLDivElement>(null);
     const courseInputRef = useRef<HTMLInputElement>(null);
@@ -255,7 +254,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 let content = null;
-                const bgClass = "bg-gray-900 border-gray-800";
+                let bgClass = "bg-gray-900 border-gray-800";
                 const isShip = !animatingShip && x === entities.x && y === entities.y;
                 if (isShip) {
                     content = <div className="w-[80%] h-[80%]"><EnterpriseIcon /></div>;
@@ -311,21 +310,18 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-950 text-slate-200 font-sans overflow-hidden">
+        <div className="flex flex-col h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 p-2 lg:p-4 border-b border-slate-800 flex justify-between items-center shadow-md pr-2 lg:pr-72">
-                <h1 className="text-lg lg:text-2xl font-bold tracking-wider text-blue-400 shrink-0">USS ENTERPRISE <span className="text-xs lg:text-sm text-slate-500 font-normal">NCC-1701</span></h1>
-                <div className="text-sm lg:text-xl font-mono text-yellow-500 truncate ml-2 lg:ml-4">
-                    SD {game.stardate.toFixed(1)}
+            <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center shadow-md pr-72">
+                <h1 className="text-2xl font-bold tracking-wider text-blue-400 shrink-0">USS ENTERPRISE <span className="text-sm text-slate-500 font-normal">NCC-1701</span></h1>
+                <div className="text-xl font-mono text-yellow-500 truncate ml-4">
+                    STARDATE {game.stardate.toFixed(1)}
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
-                {/* Left Panel - Status */}
-                <div className={`
-                    lg:w-1/4 bg-slate-900/50 p-4 border-r border-slate-800 flex-col gap-6 overflow-y-auto
-                    ${mobileTab === 'STATUS' ? 'flex flex-1 order-3 w-full' : 'hidden lg:flex lg:order-1'}
-                `}>
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Panel */}
+                <div className="w-1/4 bg-slate-900/50 p-4 border-r border-slate-800 flex flex-col gap-6 overflow-y-auto">
                     {/* Mission Status */}
                     <div className="space-y-4">
                         <h2 className="text-sm uppercase tracking-widest text-slate-500 font-bold">Mission Status</h2>
@@ -389,15 +385,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     </div>
                 </div>
 
-                {/* Center Panel - Game View */}
-                <div className={`
-                    lg:flex-1 p-0 lg:p-8 flex flex-col items-center justify-center bg-slate-950 relative
-                    w-full shrink-0 lg:shrink aspect-square lg:aspect-auto lg:h-auto order-1 lg:order-2
-                `}>
-                     {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse text-xs lg:text-base">NAV MODE</div>}
-                     {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse text-xs lg:text-base">TORPEDO MODE</div>}
+                {/* Center Panel */}
+                <div className="flex-1 p-8 flex flex-col items-center justify-center bg-slate-950 relative">
+                     {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Enter Manual Course</div>}
+                     {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Enter Manual Course</div>}
                      
-                     <div className="relative aspect-square w-full lg:h-full lg:w-auto lg:max-h-[600px] bg-slate-800 p-1 rounded-none lg:rounded-lg shadow-2xl border-y lg:border border-slate-700">
+                     <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
                         {/* Position Overlay */}
                         <div className="absolute top-2 left-2 z-10 bg-black/50 text-[10px] text-slate-400 px-2 py-1 rounded border border-slate-700">
                             Q: {game.quadX + 1},{game.quadY + 1} &nbsp; S: {game.sectX + 1},{game.sectY + 1}
@@ -571,34 +564,9 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                      </div>
                 </div>
 
-                {/* Mobile Tabs */}
-                <div className="flex lg:hidden order-2 bg-slate-900 border-b border-slate-800 shrink-0">
-                    <button
-                        onClick={() => setMobileTab('STATUS')}
-                        className={`flex-1 p-3 text-xs font-bold uppercase tracking-wider ${mobileTab === 'STATUS' ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-800' : 'text-slate-500'}`}
-                    >
-                        Status
-                    </button>
-                    <button
-                        onClick={() => setMobileTab('COMMAND')}
-                        className={`flex-1 p-3 text-xs font-bold uppercase tracking-wider ${mobileTab === 'COMMAND' ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-800' : 'text-slate-500'}`}
-                    >
-                        Command
-                    </button>
-                    <button
-                        onClick={() => setMobileTab('LOGS')}
-                        className={`flex-1 p-3 text-xs font-bold uppercase tracking-wider ${mobileTab === 'LOGS' ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-800' : 'text-slate-500'}`}
-                    >
-                        Logs
-                    </button>
-                </div>
-
-                {/* Right Panel - Controls & Logs */}
-                <div className={`
-                    lg:w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex-col gap-4
-                    ${(mobileTab === 'COMMAND' || mobileTab === 'LOGS') ? 'flex flex-1 order-3 w-full overflow-y-auto' : 'hidden lg:flex lg:order-3'}
-                `}>
-                    <div className={`grid grid-cols-2 gap-2 ${mobileTab === 'LOGS' ? 'hidden lg:grid' : ''}`}>
+                {/* Right Panel */}
+                <div className="w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-2">
                         <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); setComputerMode(false); setTargetCourse(''); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${navMode ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700 text-blue-400'}`}>NAV</button>
                         <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); setComputerMode(false); }}
@@ -784,10 +752,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                         {!navMode && !fireMode && !shieldMode && !computerMode && <div className="text-center text-slate-500 italic text-xs">Ready for orders...</div>}
                     </div>
 
-                    <div className={`
-                        flex-1 bg-black p-2 font-mono text-[10px] overflow-y-auto text-green-500 rounded border border-slate-800 min-h-[200px]
-                        ${mobileTab === 'COMMAND' ? 'hidden lg:block' : 'block'}
-                    `}>
+                    <div className="flex-1 bg-black p-2 font-mono text-[10px] overflow-y-auto text-green-500 rounded border border-slate-800">
                         {logs.map((line, i) => (
                             <div key={i} className="whitespace-pre-wrap mb-1 border-b border-green-900/20 pb-1">{line.text}</div>
                         ))}
