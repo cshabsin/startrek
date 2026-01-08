@@ -248,6 +248,22 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         </svg>
     );
 
+    const renderDataDigits = (val: number) => {
+        if (val === -1) return <span className="text-slate-700">***</span>;
+        const s = val.toString().padStart(3, '0');
+        const kDigit = s[0];
+        const bDigit = s[1];
+        const sDigit = s[2];
+
+        return (
+            <span className="font-mono">
+                <span className={kDigit === '0' ? "text-slate-700" : "text-red-500 font-bold"}>{kDigit}</span>
+                <span className={bDigit === '0' ? "text-slate-700" : "text-green-400 font-bold"}>{bDigit}</span>
+                <span className={sDigit === '0' ? "text-slate-700" : "text-slate-300 font-bold"}>{sDigit}</span>
+            </span>
+        );
+    };
+
     const renderGrid = () => {
         const grid = [];
         const entities = viewState;
@@ -498,7 +514,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                             {game.getLRSData()?.map((row, y) => row.map((val, x) => (
                                                 <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
                                                     <div className="text-[10px] text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
-                                                    <div className="text-lg font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                                                    <div className="text-lg font-mono">{renderDataDigits(val)}</div>
                                                 </div>
                                             )))}
                                         </div>
@@ -513,9 +529,9 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         {/* Digits Block - Centered over SVG */}
                                         <div className="flex justify-center w-[240px]">
                                             <div className="flex justify-center items-end" style={{ width: "54px" }}>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-red-500 leading-none">2</span>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-300 leading-none">4</span>
                                             </div>
                                         </div>
 
@@ -534,13 +550,13 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         {/* Labels Block - Fixed centers at 40, 120, 200 */}
                                         <div className="flex w-[240px]">
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-red-500">2</span> Klingons</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-300">4</span> Stars</span>
                                             </div>
                                         </div>
 
@@ -598,7 +614,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                                         }
                                                     }}
                                                 >
-                                                    {val === 0 ? '???' : val.toString().padStart(3, '0')}
+                                                    {val === 0 ? <span className="text-slate-700">???</span> : renderDataDigits(val)}
                                                 </div>
                                             );
                                         }))}
@@ -608,9 +624,9 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                         {/* Digits Block - Centered over SVG */}
                                         <div className="flex justify-center w-[240px]">
                                             <div className="flex justify-center items-end" style={{ width: "54px" }}>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-red-500 leading-none">2</span>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-300 leading-none">4</span>
                                             </div>
                                         </div>
 
@@ -629,13 +645,13 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                         {/* Labels Block - Fixed centers at 40, 120, 200 */}
                                         <div className="flex w-[240px]">
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-red-500">2</span> Klingons</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-300">4</span> Stars</span>
                                             </div>
                                         </div>
 
