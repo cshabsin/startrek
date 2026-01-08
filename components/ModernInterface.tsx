@@ -495,6 +495,25 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         <div className="text-sm text-red-400 mt-2 font-normal">Damage repair in progress</div>
                                     </div>
                                 )}
+
+                                <div className="mt-6 p-4 bg-slate-900/80 rounded-lg border border-slate-700 text-xs font-mono shadow-xl">
+                                    <div className="text-blue-400 font-bold mb-2 uppercase tracking-widest text-center border-b border-slate-800 pb-1">Sensor Data Legend</div>
+                                    <div className="grid grid-cols-3 gap-6">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-green-400 font-bold text-lg">100<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Klingons</span>
+                                        </div>
+                                        <div className="flex flex-col items-center border-x border-slate-800 px-4">
+                                            <span className="text-green-400 font-bold text-lg">10<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Starbases</span>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-green-400 font-bold text-lg">1<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Stars</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button onClick={() => setOverlay(null)} className="mt-8 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
                         )}
@@ -543,6 +562,25 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                         );
                                     }))}
                                 </div>
+
+                                <div className="mt-6 p-4 bg-slate-900/80 rounded-lg border border-slate-700 text-xs font-mono shadow-xl max-w-[400px] w-full">
+                                    <div className="text-blue-400 font-bold mb-2 uppercase tracking-widest text-center border-b border-slate-800 pb-1">Galaxy Map Legend</div>
+                                    <div className="grid grid-cols-3 gap-6">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-green-400 font-bold text-lg">100<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Klingons</span>
+                                        </div>
+                                        <div className="flex flex-col items-center border-x border-slate-800 px-4">
+                                            <span className="text-green-400 font-bold text-lg">10<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Starbases</span>
+                                        </div>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-green-400 font-bold text-lg">1<span className="text-[10px] align-top">s</span></span>
+                                            <span className="text-slate-400 uppercase text-[9px]">Stars</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button onClick={() => setOverlay(null)} className="mt-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
                             </div>
                         )}
