@@ -259,7 +259,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
             <span className="font-mono">
                 <span className={kDigit === '0' ? "text-slate-700" : "text-red-500 font-bold"}>{kDigit}</span>
                 <span className={bDigit === '0' ? "text-slate-700" : "text-green-400 font-bold"}>{bDigit}</span>
-                <span className={sDigit === '0' ? "text-slate-700" : "text-slate-300 font-bold"}>{sDigit}</span>
+                <span className={sDigit === '0' ? "text-slate-700" : "text-slate-500 font-bold"}>{sDigit}</span>
             </span>
         );
     };
@@ -531,7 +531,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                             <div className="flex justify-center items-end" style={{ width: "54px" }}>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-red-500 leading-none">2</span>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-300 leading-none">4</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-500 leading-none">4</span>
                                             </div>
                                         </div>
 
@@ -556,7 +556,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-300">4</span> Stars</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-500">4</span> Stars</span>
                                             </div>
                                         </div>
 
@@ -626,7 +626,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                             <div className="flex justify-center items-end" style={{ width: "54px" }}>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-red-500 leading-none">2</span>
                                                 <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-300 leading-none">4</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-slate-500 leading-none">4</span>
                                             </div>
                                         </div>
 
@@ -651,7 +651,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                             </div>
                                             <div className="w-[80px] text-center flex flex-col items-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-300">4</span> Stars</span>
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tight whitespace-nowrap"><span className="text-slate-500">4</span> Stars</span>
                                             </div>
                                         </div>
 
