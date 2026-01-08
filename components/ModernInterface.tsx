@@ -400,7 +400,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         </div>
                      </div>
 
-                     <div className="relative aspect-square h-full max-h-[600px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
+                     <div className="relative aspect-square h-full max-h-[700px] bg-slate-800 p-1 rounded-lg shadow-2xl border border-slate-700">
                         <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full h-full">
                             {renderGrid()}
                         </div>
@@ -561,7 +561,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         ✕
                                     </button>
                                     <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Galactic Map</h3>
-                                    <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[400px] aspect-square shrink-0">
+                                    <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[450px] aspect-square shrink-0">
                                         {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
                                             const isCurrent = x === game.quadX && y === game.quadY;
                                             return (
