@@ -658,14 +658,14 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 <label className="block text-xs font-bold uppercase text-slate-400 text-center">Deflector Control</label>
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
-                                        <span className="text-yellow-500">Ship: {Math.floor(game.energy + game.shields - shieldEnergy)}</span>
                                         <span className="text-blue-500">Shields: {shieldEnergy}</span>
+                                        <span className="text-yellow-500">Ship: {Math.floor(game.energy + game.shields - shieldEnergy)}</span>
                                     </div>
                                     <div className="relative h-6 bg-slate-900 rounded overflow-hidden border border-slate-700 flex">
-                                        <div className="h-full bg-yellow-500/50 transition-all duration-75" style={{width: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}></div>
                                         <div className="h-full bg-blue-500/50 transition-all duration-75" style={{width: `${(shieldEnergy / (game.energy + game.shields)) * 100}%`}}></div>
+                                        <div className="h-full bg-yellow-500/50 transition-all duration-75" style={{width: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}></div>
                                         <input type="range" min="0" max={game.energy + game.shields} value={shieldEnergy} onChange={(e) => setShieldEnergy(parseInt(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"/>
-                                        <div className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75" style={{left: `${((game.energy + game.shields - shieldEnergy) / (game.energy + game.shields)) * 100}%`}}></div>
+                                        <div className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_white] pointer-events-none transition-all duration-75" style={{left: `${(shieldEnergy / (game.energy + game.shields)) * 100}%`}}></div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
