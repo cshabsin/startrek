@@ -426,7 +426,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         
                         {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto">
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto rounded-lg scrollbar-hide">
                                 <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2">Status Report</h3>
                                 
                                 <div className="grid grid-cols-2 gap-8 mb-8">
@@ -478,25 +478,25 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         )}
 
                         {overlay === 'LRS' && (
-                            <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-8">
-                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Long Range Sensors</h3>
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-6 overflow-y-auto rounded-lg scrollbar-hide">
+                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Long Range Sensors</h3>
                                 {game.getLRSData() ? (
-                                    <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[400px]">
+                                    <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[360px] shrink-0">
                                         {game.getLRSData()?.map((row, y) => row.map((val, x) => (
                                             <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
-                                                <div className="text-xs text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
-                                                <div className="text-xl font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                                                <div className="text-[10px] text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
+                                                <div className="text-lg font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
                                             </div>
                                         )))}
                                     </div>
                                 ) : (
-                                    <div className="text-red-500 font-bold text-xl animate-pulse text-center border-2 border-red-500 p-4 rounded bg-red-900/20">
+                                    <div className="text-red-500 font-bold text-xl animate-pulse text-center border-2 border-red-500 p-4 rounded bg-red-900/20 shrink-0">
                                         SENSORS OFFLINE
                                         <div className="text-sm text-red-400 mt-2 font-normal">Damage repair in progress</div>
                                     </div>
                                 )}
 
-                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full flex flex-col items-center">
+                                <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
                                     {/* Digits Block - Centered over SVG */}
                                     <div className="flex justify-center w-[240px]">
                                         <div className="flex justify-center items-end" style={{ width: "54px" }}>
@@ -536,13 +536,13 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                     </div>
                                 </div>
 
-                                <button onClick={() => setOverlay(null)} className="mt-8 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
+                                <button onClick={() => setOverlay(null)} className="mt-4 mb-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700 shrink-0 text-white font-bold">CLOSE</button>
                             </div>
                         )}
                         {overlay === 'MAP' && (
-                            <div className="absolute inset-0 bg-black/90 z-40 flex flex-col items-center justify-center p-4">
-                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest">Galactic Map</h3>
-                                <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[500px] aspect-square">
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-4 overflow-y-auto rounded-lg scrollbar-hide">
+                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Galactic Map</h3>
+                                <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[400px] aspect-square shrink-0">
                                     {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
                                         const isCurrent = x === game.quadX && y === game.quadY;
                                         return (
@@ -585,7 +585,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     }))}
                                 </div>
 
-                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full flex flex-col items-center">
+                                <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
                                     {/* Digits Block - Centered over SVG */}
                                     <div className="flex justify-center w-[240px]">
                                         <div className="flex justify-center items-end" style={{ width: "54px" }}>
@@ -625,7 +625,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     </div>
                                 </div>
 
-                                <button onClick={() => setOverlay(null)} className="mt-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700">CLOSE</button>
+                                <button onClick={() => setOverlay(null)} className="mt-4 mb-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700 shrink-0 text-white font-bold">CLOSE</button>
                             </div>
                         )}
 
