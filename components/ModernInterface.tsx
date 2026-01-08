@@ -496,20 +496,52 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                     </div>
                                 )}
 
-                                <div className="mt-6 p-4 bg-slate-900/80 rounded-lg border border-slate-700 text-xs font-mono shadow-xl">
-                                    <div className="text-blue-400 font-bold mb-2 uppercase tracking-widest text-center border-b border-slate-800 pb-1">Sensor Data Legend</div>
-                                    <div className="grid grid-cols-3 gap-6">
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-green-400 font-bold text-lg">100<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Klingons</span>
+                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
+                                    <div className="flex flex-col items-center">
+                                        {/* Digits */}
+                                        <div className="flex justify-center gap-12 mb-0">
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">2</span>
+                                            </div>
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">1</span>
+                                            </div>
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">4</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-center border-x border-slate-800 px-4">
-                                            <span className="text-green-400 font-bold text-lg">10<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Starbases</span>
+
+                                        {/* Diagram Lines (SVG) */}
+                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                            {/* Top Ticks */}
+                                            <line x1="30" y1="0" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="0" x2="120" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="210" y1="0" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Horizontal Bar */}
+                                            <line x1="30" y1="15" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Bottom Ticks */}
+                                            <line x1="30" y1="15" x2="30" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="15" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="210" y1="15" x2="210" y2="30" stroke="currentColor" strokeWidth="2" />
+                                        </svg>
+
+                                        {/* Labels */}
+                                        <div className="flex justify-center gap-4 w-full">
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Klingons</span>
+                                            </div>
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Starbases</span>
+                                            </div>
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Stars</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-green-400 font-bold text-lg">1<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Stars</span>
+
+                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                            Long Range Sensor Data Format
                                         </div>
                                     </div>
                                 </div>
@@ -563,20 +595,52 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     }))}
                                 </div>
 
-                                <div className="mt-6 p-4 bg-slate-900/80 rounded-lg border border-slate-700 text-xs font-mono shadow-xl max-w-[400px] w-full">
-                                    <div className="text-blue-400 font-bold mb-2 uppercase tracking-widest text-center border-b border-slate-800 pb-1">Galaxy Map Legend</div>
-                                    <div className="grid grid-cols-3 gap-6">
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-green-400 font-bold text-lg">100<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Klingons</span>
+                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
+                                    <div className="flex flex-col items-center">
+                                        {/* Digits */}
+                                        <div className="flex justify-center gap-12 mb-0">
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">2</span>
+                                            </div>
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">1</span>
+                                            </div>
+                                            <div className="flex flex-col items-center w-12">
+                                                <span className="text-3xl font-mono font-black text-green-400">4</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-center border-x border-slate-800 px-4">
-                                            <span className="text-green-400 font-bold text-lg">10<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Starbases</span>
+
+                                        {/* Diagram Lines (SVG) */}
+                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                            {/* Top Ticks */}
+                                            <line x1="30" y1="0" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="0" x2="120" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="210" y1="0" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Horizontal Bar */}
+                                            <line x1="30" y1="15" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Bottom Ticks */}
+                                            <line x1="30" y1="15" x2="30" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="15" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="210" y1="15" x2="210" y2="30" stroke="currentColor" strokeWidth="2" />
+                                        </svg>
+
+                                        {/* Labels */}
+                                        <div className="flex justify-center gap-4 w-full">
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Klingons</span>
+                                            </div>
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Starbases</span>
+                                            </div>
+                                            <div className="w-[80px] text-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Stars</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-green-400 font-bold text-lg">1<span className="text-[10px] align-top">s</span></span>
-                                            <span className="text-slate-400 uppercase text-[9px]">Stars</span>
+
+                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                            Galactic Map Data Format
                                         </div>
                                     </div>
                                 </div>
