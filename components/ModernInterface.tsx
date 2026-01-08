@@ -496,46 +496,43 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                     </div>
                                 )}
 
-                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
-                                    <div className="flex flex-col items-center">
-                                        {/* Digits */}
-                                        <div className="flex justify-center gap-3 mb-0">
-                                            <span className="text-3xl font-mono font-black text-green-400">2</span>
-                                            <span className="text-3xl font-mono font-black text-green-400">1</span>
-                                            <span className="text-3xl font-mono font-black text-green-400">4</span>
+                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full flex flex-col items-center">
+                                    {/* Digits Block - Centered over SVG */}
+                                    <div className="flex justify-center w-[240px]">
+                                        <div className="flex justify-center items-end" style={{ width: "54px" }}>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                         </div>
+                                    </div>
 
-                                        {/* Diagram Lines (SVG) */}
-                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                            {/* Vertical lines from digits */}
-                                            <line x1="102" y1="0" x2="102" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="0" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="138" y1="0" x2="138" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            
-                                            {/* Horizontal Bar */}
-                                            <line x1="40" y1="15" x2="200" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            
-                                            {/* Bottom Ticks for outer labels */}
-                                            <line x1="40" y1="15" x2="40" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="200" y1="15" x2="200" y2="30" stroke="currentColor" strokeWidth="2" />
-                                        </svg>
+                                    {/* Diagram Lines (SVG) - Three distinct paths */}
+                                    <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                        {/* Klingons: Left digit (120-18=102) to Left label (40) */}
+                                        <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                        
+                                        {/* Starbases: Center digit (120) to Center label (120) */}
+                                        <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
+                                        
+                                        {/* Stars: Right digit (120+18=138) to Right label (200) */}
+                                        <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                    </svg>
 
-                                        {/* Labels */}
-                                        <div className="flex justify-between w-full px-2">
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">2</span> Klingons</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">1</span> Bases</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">4</span> Stars</span>
-                                            </div>
+                                    {/* Labels Block - Fixed centers at 40, 120, 200 */}
+                                    <div className="flex w-[240px]">
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
                                         </div>
-
-                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
-                                            Long Range Sensor Data Format
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                         </div>
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                        Long Range Sensor Data Format
                                     </div>
                                 </div>
 
@@ -588,46 +585,43 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     }))}
                                 </div>
 
-                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
-                                    <div className="flex flex-col items-center">
-                                        {/* Digits */}
-                                        <div className="flex justify-center gap-3 mb-0">
-                                            <span className="text-3xl font-mono font-black text-green-400">2</span>
-                                            <span className="text-3xl font-mono font-black text-green-400">1</span>
-                                            <span className="text-3xl font-mono font-black text-green-400">4</span>
+                                <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full flex flex-col items-center">
+                                    {/* Digits Block - Centered over SVG */}
+                                    <div className="flex justify-center w-[240px]">
+                                        <div className="flex justify-center items-end" style={{ width: "54px" }}>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
+                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                         </div>
+                                    </div>
 
-                                        {/* Diagram Lines (SVG) */}
-                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                            {/* Vertical lines from digits */}
-                                            <line x1="102" y1="0" x2="102" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="0" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="138" y1="0" x2="138" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            
-                                            {/* Horizontal Bar */}
-                                            <line x1="40" y1="15" x2="200" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            
-                                            {/* Bottom Ticks for outer labels */}
-                                            <line x1="40" y1="15" x2="40" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="200" y1="15" x2="200" y2="30" stroke="currentColor" strokeWidth="2" />
-                                        </svg>
+                                    {/* Diagram Lines (SVG) - Three distinct paths */}
+                                    <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                        {/* Klingons: Left digit (120-18=102) to Left label (40) */}
+                                        <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                        
+                                        {/* Starbases: Center digit (120) to Center label (120) */}
+                                        <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
+                                        
+                                        {/* Stars: Right digit (120+18=138) to Right label (200) */}
+                                        <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                    </svg>
 
-                                        {/* Labels */}
-                                        <div className="flex justify-between w-full px-2">
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">2</span> Klingons</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">1</span> Bases</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-20">
-                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">4</span> Stars</span>
-                                            </div>
+                                    {/* Labels Block - Fixed centers at 40, 120, 200 */}
+                                    <div className="flex w-[240px]">
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
                                         </div>
-
-                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
-                                            Galactic Map Data Format
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
                                         </div>
+                                        <div className="w-[80px] text-center flex flex-col items-center">
+                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                        Galactic Map Data Format
                                     </div>
                                 </div>
 
