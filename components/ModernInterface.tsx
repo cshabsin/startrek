@@ -499,44 +499,37 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                 <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
                                     <div className="flex flex-col items-center">
                                         {/* Digits */}
-                                        <div className="flex justify-center gap-12 mb-0">
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">2</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">1</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">4</span>
-                                            </div>
+                                        <div className="flex justify-center gap-3 mb-0">
+                                            <span className="text-3xl font-mono font-black text-green-400">2</span>
+                                            <span className="text-3xl font-mono font-black text-green-400">1</span>
+                                            <span className="text-3xl font-mono font-black text-green-400">4</span>
                                         </div>
 
                                         {/* Diagram Lines (SVG) */}
                                         <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                            {/* Top Ticks */}
-                                            <line x1="30" y1="0" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="0" x2="120" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="210" y1="0" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            {/* Vertical lines from digits */}
+                                            <line x1="102" y1="0" x2="102" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="0" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="138" y1="0" x2="138" y2="15" stroke="currentColor" strokeWidth="2" />
                                             
                                             {/* Horizontal Bar */}
-                                            <line x1="30" y1="15" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="40" y1="15" x2="200" y2="15" stroke="currentColor" strokeWidth="2" />
                                             
-                                            {/* Bottom Ticks */}
-                                            <line x1="30" y1="15" x2="30" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="15" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="210" y1="15" x2="210" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            {/* Bottom Ticks for outer labels */}
+                                            <line x1="40" y1="15" x2="40" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="200" y1="15" x2="200" y2="30" stroke="currentColor" strokeWidth="2" />
                                         </svg>
 
                                         {/* Labels */}
-                                        <div className="flex justify-center gap-4 w-full">
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Klingons</span>
+                                        <div className="flex justify-between w-full px-2">
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">2</span> Klingons</span>
                                             </div>
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Starbases</span>
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">1</span> Bases</span>
                                             </div>
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Stars</span>
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">4</span> Stars</span>
                                             </div>
                                         </div>
 
@@ -598,44 +591,37 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 <div className="mt-6 p-6 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[450px] w-full">
                                     <div className="flex flex-col items-center">
                                         {/* Digits */}
-                                        <div className="flex justify-center gap-12 mb-0">
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">2</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">1</span>
-                                            </div>
-                                            <div className="flex flex-col items-center w-12">
-                                                <span className="text-3xl font-mono font-black text-green-400">4</span>
-                                            </div>
+                                        <div className="flex justify-center gap-3 mb-0">
+                                            <span className="text-3xl font-mono font-black text-green-400">2</span>
+                                            <span className="text-3xl font-mono font-black text-green-400">1</span>
+                                            <span className="text-3xl font-mono font-black text-green-400">4</span>
                                         </div>
 
                                         {/* Diagram Lines (SVG) */}
                                         <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                            {/* Top Ticks */}
-                                            <line x1="30" y1="0" x2="30" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="0" x2="120" y2="15" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="210" y1="0" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            {/* Vertical lines from digits */}
+                                            <line x1="102" y1="0" x2="102" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="120" y1="0" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="138" y1="0" x2="138" y2="15" stroke="currentColor" strokeWidth="2" />
                                             
                                             {/* Horizontal Bar */}
-                                            <line x1="30" y1="15" x2="210" y2="15" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="40" y1="15" x2="200" y2="15" stroke="currentColor" strokeWidth="2" />
                                             
-                                            {/* Bottom Ticks */}
-                                            <line x1="30" y1="15" x2="30" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="120" y1="15" x2="120" y2="30" stroke="currentColor" strokeWidth="2" />
-                                            <line x1="210" y1="15" x2="210" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            {/* Bottom Ticks for outer labels */}
+                                            <line x1="40" y1="15" x2="40" y2="30" stroke="currentColor" strokeWidth="2" />
+                                            <line x1="200" y1="15" x2="200" y2="30" stroke="currentColor" strokeWidth="2" />
                                         </svg>
 
                                         {/* Labels */}
-                                        <div className="flex justify-center gap-4 w-full">
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Klingons</span>
+                                        <div className="flex justify-between w-full px-2">
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">2</span> Klingons</span>
                                             </div>
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Starbases</span>
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">1</span> Bases</span>
                                             </div>
-                                            <div className="w-[80px] text-center">
-                                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">Stars</span>
+                                            <div className="flex flex-col items-center w-20">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight"><span className="text-green-400">4</span> Stars</span>
                                             </div>
                                         </div>
 
