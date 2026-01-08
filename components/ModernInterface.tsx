@@ -426,216 +426,222 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         
                         {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto rounded-lg scrollbar-hide relative">
-                                <button 
-                                    onClick={() => setOverlay(null)}
-                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
-                                >
-                                    ✕
-                                </button>
-                                <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2">Status Report</h3>
-                                
-                                <div className="grid grid-cols-2 gap-8 mb-8">
-                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
-                                        <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Mission Objectives</h4>
-                                        <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
-                                            <span className="text-sm text-slate-300">Klingons Remaining</span>
-                                            <span className="text-2xl font-mono text-red-500 font-bold">{missionStats.klingonsLeft}</span>
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto rounded-lg scrollbar-hide">
+                                <div className="relative w-full flex flex-col items-center">
+                                    <button 
+                                        onClick={() => setOverlay(null)}
+                                        className="absolute top-0 right-0 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                    >
+                                        ✕
+                                    </button>
+                                    <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2 w-full px-12">Status Report</h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-8 mb-8 w-full">
+                                        <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                                            <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Mission Objectives</h4>
+                                            <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
+                                                <span className="text-sm text-slate-300">Klingons Remaining</span>
+                                                <span className="text-2xl font-mono text-red-500 font-bold">{missionStats.klingonsLeft}</span>
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-slate-300">Days Left</span>
+                                                <span className="text-2xl font-mono text-yellow-500 font-bold">{missionStats.daysLeft}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-sm text-slate-300">Days Left</span>
-                                            <span className="text-2xl font-mono text-yellow-500 font-bold">{missionStats.daysLeft}</span>
+                                        <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                                            <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Logistics</h4>
+                                            <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
+                                                <span className="text-sm text-slate-300">Starbases</span>
+                                                <span className="text-xl font-mono text-green-500 font-bold">{missionStats.starbases}</span>
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-slate-300">Alert Condition</span>
+                                                <span className={`text-xl font-bold uppercase ${missionStats.condition === '*RED*' ? 'text-red-600 animate-pulse' : missionStats.condition === 'YELLOW' ? 'text-yellow-500' : 'text-green-500'}`}>
+                                                    {missionStats.condition}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
-                                        <h4 className="text-sm font-bold text-slate-400 mb-2 uppercase">Logistics</h4>
-                                        <div className="flex justify-between items-end border-b border-slate-800 pb-2 mb-2">
-                                            <span className="text-sm text-slate-300">Starbases</span>
-                                            <span className="text-xl font-mono text-green-500 font-bold">{missionStats.starbases}</span>
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-sm text-slate-300">Alert Condition</span>
-                                            <span className={`text-xl font-bold uppercase ${missionStats.condition === '*RED*' ? 'text-red-600 animate-pulse' : missionStats.condition === 'YELLOW' ? 'text-yellow-500' : 'text-green-500'}`}>
-                                                {missionStats.condition}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <h4 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Damage Control Report</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {damageReport.map((sys, i) => (
-                                        <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded border border-slate-800">
-                                            <span className={`text-xs font-bold ${sys.value < 0 ? 'text-red-400' : 'text-slate-300'}`}>{sys.name}</span>
-                                            {sys.value < 0 ? (
-                                                <div className="text-right">
-                                                    <div className="text-xs text-red-500 font-bold uppercase">Damaged</div>
-                                                    <div className="text-[10px] text-slate-500">Rep in {Math.abs(sys.value).toFixed(1)} days</div>
-                                                </div>
-                                            ) : (
-                                                <div className="text-xs text-green-500 font-bold uppercase">Operational</div>
-                                            )}
-                                        </div>
-                                    ))}
+                                    <h4 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider w-full">Damage Control Report</h4>
+                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                        {damageReport.map((sys, i) => (
+                                            <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded border border-slate-800">
+                                                <span className={`text-xs font-bold ${sys.value < 0 ? 'text-red-400' : 'text-slate-300'}`}>{sys.name}</span>
+                                                {sys.value < 0 ? (
+                                                    <div className="text-right">
+                                                        <div className="text-xs text-red-500 font-bold uppercase">Damaged</div>
+                                                        <div className="text-[10px] text-slate-500">Rep in {Math.abs(sys.value).toFixed(1)} days</div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-green-500 font-bold uppercase">Operational</div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {overlay === 'LRS' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-6 overflow-y-auto rounded-lg scrollbar-hide relative">
-                                <button 
-                                    onClick={() => setOverlay(null)}
-                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
-                                >
-                                    ✕
-                                </button>
-                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Long Range Sensors</h3>
-                                {game.getLRSData() ? (
-                                    <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[360px] shrink-0">
-                                        {game.getLRSData()?.map((row, y) => row.map((val, x) => (
-                                            <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
-                                                <div className="text-[10px] text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
-                                                <div className="text-lg font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-6 overflow-y-auto rounded-lg scrollbar-hide">
+                                <div className="relative w-full flex flex-col items-center justify-start min-h-full">
+                                    <button 
+                                        onClick={() => setOverlay(null)}
+                                        className="absolute top-0 right-0 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                    >
+                                        ✕
+                                    </button>
+                                    <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Long Range Sensors</h3>
+                                    {game.getLRSData() ? (
+                                        <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[360px] shrink-0">
+                                            {game.getLRSData()?.map((row, y) => row.map((val, x) => (
+                                                <div key={`${x},${y}`} className="aspect-square bg-slate-900 border border-slate-700 flex flex-col items-center justify-center rounded">
+                                                    <div className="text-[10px] text-slate-500 mb-1">{val === -1 ? '' : `${game.quadX + x - 1 + 1},${game.quadY + y - 1 + 1}`}</div>
+                                                    <div className="text-lg font-mono text-green-400">{val === -1 ? '***' : val.toString().padStart(3, '0')}</div>
+                                                </div>
+                                            )))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-red-500 font-bold text-xl animate-pulse text-center border-2 border-red-500 p-4 rounded bg-red-900/20 shrink-0">
+                                            SENSORS OFFLINE
+                                            <div className="text-sm text-red-400 mt-2 font-normal">Damage repair in progress</div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
+                                        {/* Digits Block - Centered over SVG */}
+                                        <div className="flex justify-center w-[240px]">
+                                            <div className="flex justify-center items-end" style={{ width: "54px" }}>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                             </div>
-                                        )))}
-                                    </div>
-                                ) : (
-                                    <div className="text-red-500 font-bold text-xl animate-pulse text-center border-2 border-red-500 p-4 rounded bg-red-900/20 shrink-0">
-                                        SENSORS OFFLINE
-                                        <div className="text-sm text-red-400 mt-2 font-normal">Damage repair in progress</div>
-                                    </div>
-                                )}
-
-                                <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
-                                    {/* Digits Block - Centered over SVG */}
-                                    <div className="flex justify-center w-[240px]">
-                                        <div className="flex justify-center items-end" style={{ width: "54px" }}>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                         </div>
-                                    </div>
 
-                                    {/* Diagram Lines (SVG) - Three distinct paths */}
-                                    <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                        {/* Klingons: Left digit (120-18=102) to Left label (40) */}
-                                        <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                                        
-                                        {/* Starbases: Center digit (120) to Center label (120) */}
-                                        <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
-                                        
-                                        {/* Stars: Right digit (120+18=138) to Right label (200) */}
-                                        <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                                    </svg>
+                                        {/* Diagram Lines (SVG) - Three distinct paths */}
+                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                            {/* Klingons: Left digit (120-18=102) to Left label (40) */}
+                                            <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                            
+                                            {/* Starbases: Center digit (120) to Center label (120) */}
+                                            <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Stars: Right digit (120+18=138) to Right label (200) */}
+                                            <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                        </svg>
 
-                                    {/* Labels Block - Fixed centers at 40, 120, 200 */}
-                                    <div className="flex w-[240px]">
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                        {/* Labels Block - Fixed centers at 40, 120, 200 */}
+                                        <div className="flex w-[240px]">
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                            </div>
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
+                                            </div>
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                            </div>
                                         </div>
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
-                                        </div>
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
-                                        Long Range Sensor Data Format
+                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                            Long Range Sensor Data Format
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         )}
                         {overlay === 'MAP' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-4 overflow-y-auto rounded-lg scrollbar-hide relative">
-                                <button 
-                                    onClick={() => setOverlay(null)}
-                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
-                                >
-                                    ✕
-                                </button>
-                                <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Galactic Map</h3>
-                                <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[400px] aspect-square shrink-0">
-                                    {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
-                                        const isCurrent = x === game.quadX && y === game.quadY;
-                                        return (
-                                            <div 
-                                                key={`${x},${y}`} 
-                                                className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono cursor-pointer hover:bg-white/20 transition-colors
-                                                    ${isCurrent ? 'bg-blue-900/40 text-blue-200 border-blue-500' : 'bg-slate-900/40 text-slate-500'}
-                                                `} 
-                                                style={{ gridColumn: x + 1, gridRow: y + 1 }}
-                                                onClick={() => {
-                                                    if (isCurrent) return; 
-                                                    
-                                                    const dx = x - game.quadX;
-                                                    const dy = y - game.quadY;
-                                                    
-                                                    // Calculate course
-                                                    const angle = Math.atan2(dy, dx);
-                                                    let course = 1 - angle / (Math.PI / 4);
-                                                    if (course < 1) course += 8;
-                                                    if (course >= 9) course -= 8;
-                                                    
-                                                    // Calculate Warp (Distance in Quadrants)
-                                                    let dist = Math.sqrt(dx*dx + dy*dy);
-                                                    // Clamp to max engine speed
-                                                    if (dist > maxWarp) dist = maxWarp;
-                                                    
-                                                    // Round to 1 decimal
-                                                    dist = Math.round(dist * 10) / 10;
-                                                    
-                                                    if (confirm(`Warp to Quadrant ${x+1},${y+1}?
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-4 overflow-y-auto rounded-lg scrollbar-hide">
+                                <div className="relative w-full flex flex-col items-center justify-start min-h-full">
+                                    <button 
+                                        onClick={() => setOverlay(null)}
+                                        className="absolute top-0 right-0 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                    >
+                                        ✕
+                                    </button>
+                                    <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Galactic Map</h3>
+                                    <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[400px] aspect-square shrink-0">
+                                        {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
+                                            const isCurrent = x === game.quadX && y === game.quadY;
+                                            return (
+                                                <div 
+                                                    key={`${x},${y}`} 
+                                                    className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono cursor-pointer hover:bg-white/20 transition-colors
+                                                        ${isCurrent ? 'bg-blue-900/40 text-blue-200 border-blue-500' : 'bg-slate-900/40 text-slate-500'}
+                                                    `} 
+                                                    style={{ gridColumn: x + 1, gridRow: y + 1 }}
+                                                    onClick={() => {
+                                                        if (isCurrent) return; 
+                                                        
+                                                        const dx = x - game.quadX;
+                                                        const dy = y - game.quadY;
+                                                        
+                                                        // Calculate course
+                                                        const angle = Math.atan2(dy, dx);
+                                                        let course = 1 - angle / (Math.PI / 4);
+                                                        if (course < 1) course += 8;
+                                                        if (course >= 9) course -= 8;
+                                                        
+                                                        // Calculate Warp (Distance in Quadrants)
+                                                        let dist = Math.sqrt(dx*dx + dy*dy);
+                                                        // Clamp to max engine speed
+                                                        if (dist > maxWarp) dist = maxWarp;
+                                                        
+                                                        // Round to 1 decimal
+                                                        dist = Math.round(dist * 10) / 10;
+                                                        
+                                                        if (confirm(`Warp to Quadrant ${x+1},${y+1}?
 Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
-                                                        setOverlay(null);
-                                                        handleNav(course, dist);
-                                                    }
-                                                }}
-                                            >
-                                                {val === 0 ? '???' : val.toString().padStart(3, '0')}
+                                                            setOverlay(null);
+                                                            handleNav(course, dist);
+                                                        }
+                                                    }}
+                                                >
+                                                    {val === 0 ? '???' : val.toString().padStart(3, '0')}
+                                                </div>
+                                            );
+                                        }))}
+                                    </div>
+
+                                    <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
+                                        {/* Digits Block - Centered over SVG */}
+                                        <div className="flex justify-center w-[240px]">
+                                            <div className="flex justify-center items-end" style={{ width: "54px" }}>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
+                                                <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                             </div>
-                                        );
-                                    }))}
-                                </div>
-
-                                <div className="mt-4 p-4 bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl max-w-[400px] w-full flex flex-col items-center shrink-0 scale-90 origin-top">
-                                    {/* Digits Block - Centered over SVG */}
-                                    <div className="flex justify-center w-[240px]">
-                                        <div className="flex justify-center items-end" style={{ width: "54px" }}>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">2</span>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">1</span>
-                                            <span className="w-[18px] text-center text-3xl font-mono font-black text-green-400 leading-none">4</span>
                                         </div>
-                                    </div>
 
-                                    {/* Diagram Lines (SVG) - Three distinct paths */}
-                                    <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
-                                        {/* Klingons: Left digit (120-18=102) to Left label (40) */}
-                                        <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                                        
-                                        {/* Starbases: Center digit (120) to Center label (120) */}
-                                        <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
-                                        
-                                        {/* Stars: Right digit (120+18=138) to Right label (200) */}
-                                        <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                                    </svg>
+                                        {/* Diagram Lines (SVG) - Three distinct paths */}
+                                        <svg width="240" height="40" viewBox="0 0 240 40" className="text-slate-600">
+                                            {/* Klingons: Left digit (120-18=102) to Left label (40) */}
+                                            <path d="M 102 0 L 102 15 L 40 15 L 40 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                            
+                                            {/* Starbases: Center digit (120) to Center label (120) */}
+                                            <path d="M 120 0 L 120 30" fill="none" stroke="currentColor" strokeWidth="2" />
+                                            
+                                            {/* Stars: Right digit (120+18=138) to Right label (200) */}
+                                            <path d="M 138 0 L 138 15 L 200 15 L 200 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                        </svg>
 
-                                    {/* Labels Block - Fixed centers at 40, 120, 200 */}
-                                    <div className="flex w-[240px]">
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                        {/* Labels Block - Fixed centers at 40, 120, 200 */}
+                                        <div className="flex w-[240px]">
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">2</span> Klingons</span>
+                                            </div>
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
+                                            </div>
+                                            <div className="w-[80px] text-center flex flex-col items-center">
+                                                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
+                                            </div>
                                         </div>
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">1</span> Bases</span>
-                                        </div>
-                                        <div className="w-[80px] text-center flex flex-col items-center">
-                                            <span className="text-[10px] uppercase font-bold text-slate-300 tracking-tight whitespace-nowrap"><span className="text-green-400">4</span> Stars</span>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
-                                        Galactic Map Data Format
+                                        <div className="mt-4 text-[9px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-2 w-full text-center">
+                                            Galactic Map Data Format
+                                        </div>
                                     </div>
                                 </div>
                             </div>
