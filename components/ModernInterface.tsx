@@ -426,7 +426,13 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         
                         {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto rounded-lg scrollbar-hide">
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col p-8 overflow-y-auto rounded-lg scrollbar-hide relative">
+                                <button 
+                                    onClick={() => setOverlay(null)}
+                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                >
+                                    ✕
+                                </button>
                                 <h3 className="text-2xl font-bold mb-6 text-blue-400 uppercase tracking-widest text-center border-b border-blue-900 pb-2">Status Report</h3>
                                 
                                 <div className="grid grid-cols-2 gap-8 mb-8">
@@ -472,13 +478,17 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         </div>
                                     ))}
                                 </div>
-
-                                <button onClick={() => setOverlay(null)} className="mt-auto bg-slate-800 px-6 py-3 rounded hover:bg-slate-700 text-white font-bold tracking-widest w-full border border-slate-600">CLOSE REPORT</button>
                             </div>
                         )}
 
                         {overlay === 'LRS' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-6 overflow-y-auto rounded-lg scrollbar-hide">
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-6 overflow-y-auto rounded-lg scrollbar-hide relative">
+                                <button 
+                                    onClick={() => setOverlay(null)}
+                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                >
+                                    ✕
+                                </button>
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Long Range Sensors</h3>
                                 {game.getLRSData() ? (
                                     <div className="grid grid-cols-3 grid-rows-3 gap-4 w-full max-w-[360px] shrink-0">
@@ -535,12 +545,16 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                         Long Range Sensor Data Format
                                     </div>
                                 </div>
-
-                                <button onClick={() => setOverlay(null)} className="mt-4 mb-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700 shrink-0 text-white font-bold">CLOSE</button>
                             </div>
                         )}
                         {overlay === 'MAP' && (
-                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-4 overflow-y-auto rounded-lg scrollbar-hide">
+                            <div className="absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-start p-4 overflow-y-auto rounded-lg scrollbar-hide relative">
+                                <button 
+                                    onClick={() => setOverlay(null)}
+                                    className="absolute top-4 right-4 w-8 h-8 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shadow-lg"
+                                >
+                                    ✕
+                                </button>
                                 <h3 className="text-xl font-bold mb-4 text-blue-400 uppercase tracking-widest shrink-0">Galactic Map</h3>
                                 <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[400px] aspect-square shrink-0">
                                     {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
@@ -624,8 +638,6 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                         Galactic Map Data Format
                                     </div>
                                 </div>
-
-                                <button onClick={() => setOverlay(null)} className="mt-4 mb-4 bg-slate-800 px-6 py-2 rounded hover:bg-slate-700 shrink-0 text-white font-bold">CLOSE</button>
                             </div>
                         )}
 
@@ -665,8 +677,8 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                         
                         <button onClick={() => { setComputerMode(!computerMode); setNavMode(false); setFireMode(null); setShieldMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${computerMode ? 'bg-purple-600' : 'bg-slate-800 hover:bg-slate-700 text-purple-400'}`}>COMPUTER</button>
-                        <button onClick={() => setOverlay('LRS')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-green-400">LRS SCAN</button>
-                        <button onClick={() => setOverlay('MAP')} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-purple-400">GALAXY MAP</button>
+                        <button onClick={() => setOverlay(overlay === 'LRS' ? null : 'LRS')} className={`p-2 rounded font-bold text-xs transition-colors ${overlay === 'LRS' ? 'bg-green-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-green-400'}`}>LRS SCAN</button>
+                        <button onClick={() => setOverlay(overlay === 'MAP' ? null : 'MAP')} className={`p-2 rounded font-bold text-xs transition-colors ${overlay === 'MAP' ? 'bg-purple-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-purple-400'}`}>GALAXY MAP</button>
                         <button onClick={() => { if(confirm('Resign command?')) exec(() => game.processInput('XXX')) }} className="p-2 rounded font-bold text-xs bg-slate-800 hover:bg-slate-700 text-gray-500">RESIGN</button>
                     </div>
 
