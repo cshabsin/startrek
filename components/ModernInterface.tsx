@@ -295,8 +295,9 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         if (course >= 9) course -= 8;
                         
                         // Calculate Auto-Warp
-                        const distSectors = Math.sqrt(dx*dx + dy*dy);
-                        let autoWarp = Math.sqrt(distSectors / 8);
+                        // BASIC algo moves in Chebyshev distance (max(dx, dy)) due to non-normalized vectors
+                        const distSectors = Math.max(Math.abs(dx), Math.abs(dy));
+                        let autoWarp = distSectors / 8;
                         autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
                         autoWarp = Math.round(autoWarp * 20) / 20;
                         

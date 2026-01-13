@@ -58,6 +58,16 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                         </section>
 
                         <section>
+                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Changelog</h3>
+                             <div className="space-y-4 text-sm font-mono text-slate-400 border-l-2 border-slate-800 pl-4">
+                                 <div>
+                                     <div className="text-blue-400 font-bold mb-1">Navigation Update</div>
+                                     <p>Restored original BASIC navigation algorithm. Movement now uses a lookup table with linear interpolation instead of trigonometric functions. This restores the authentic "faster diagonal movement" (approx 1.4x speed) present in the 1970s original.</p>
+                                 </div>
+                             </div>
+                        </section>
+
+                        <section>
                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Art & Design</h3>
                             <ul className="list-disc list-inside text-slate-300 space-y-2">
                                 <li><span className="font-bold text-white">Tactical Icons:</span> Custom SVG vectors designed for this implementation.</li>
