@@ -520,6 +520,9 @@ export class StarTrekGame {
 
         // Linear Interpolation of direction vector components
         // Note: dy corresponds to Row Change (BASIC X1), dx to Col Change (BASIC X2)
+        // This linear interpolation results in faster movement on diagonals (approx 1.41x)
+        // compared to cardinal directions. This is "correct" for the original BASIC algorithm
+        // and is preserved here for historical accuracy.
         const dy = C[ic][0] + (C[nextC][0] - C[ic][0]) * frac;
         const dx = C[ic][1] + (C[nextC][1] - C[ic][1]) * frac;
         
