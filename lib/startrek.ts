@@ -480,10 +480,11 @@ export class StarTrekGame {
   }
 
   public executeNav(course: number, warp: number, suppressLogs: boolean = false) {
-        if (isNaN(course) || course < 1 || course >= 9) {
+        if (isNaN(course) || course < 1 || course > 9) {
             this.print("   LT. SULU REPORTS, 'INCORRECT COURSE DATA, SIR!'");
             return;
         }
+        if (course === 9) course = 1;
         if (isNaN(warp) || warp < 0) return;
         
         const maxWarp = this.damage[0] < 0 ? 0.2 : 8;
@@ -497,9 +498,30 @@ export class StarTrekGame {
              return;
         }
 
-        const angle = (1 - course) * (Math.PI / 4);
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle); 
+        // Direction Lookup Table (Row, Col) = (y, x)
+        // Indexes correspond to Course 1-9.
+        // C(1)=0,1 (East); C(2)=-1,1 (NE); C(3)=-1,0 (N); ...
+        const C = [
+            [0,0], // Dummy
+            [0, 1],   // 1: East
+            [-1, 1],  // 2: NE
+            [-1, 0],  // 3: North
+            [-1, -1], // 4: NW
+            [0, -1],  // 5: West
+            [1, -1],  // 6: SW
+            [1, 0],   // 7: South
+            [1, 1],   // 8: SE
+            [0, 1]    // 9: East (Wrap)
+        ];
+
+        const ic = Math.floor(course);
+        const frac = course - ic;
+        const nextC = ic + 1; // Course 9 is handled by C[9] which matches C[1]
+
+        // Linear Interpolation of direction vector components
+        // Note: dy corresponds to Row Change (BASIC X1), dx to Col Change (BASIC X2)
+        const dy = C[ic][0] + (C[nextC][0] - C[ic][0]) * frac;
+        const dx = C[ic][1] + (C[nextC][1] - C[ic][1]) * frac;
         
         // Basic movement logic: N = INT(W1 * 8 + 0.5)
         const numSectors = Math.floor(warp * 8 + 0.5);
@@ -520,7 +542,7 @@ export class StarTrekGame {
         this.klingonsMoveAndFire();
         this.repairSystem(warp); 
         
-        const timeSpent = warp < 1 ? 0.05 * Math.floor(20 * warp) : 1;
+        const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
         this.stardate += timeSpent;
         if (this.stardate > this.stardateEnd) {
             this.gameOver();
