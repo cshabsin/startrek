@@ -9,27 +9,20 @@ import { StarTrekGame } from '@/lib/startrek';
 import { ThemeType, THEMES } from '@/lib/themes';
 
 export default function Home() {
-  const [mode, setMode] = useState<'classic' | 'modern'>('classic');
-  const [theme, setTheme] = useState<ThemeType>('TERMINAL');
+  const [mode, setMode] = useState<'classic' | 'modern'>(() => {
+    if (typeof window === 'undefined') return 'classic';
+    return window.location.hash.toLowerCase() === '#modern' ? 'modern' : 'classic';
+  });
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    if (typeof window === 'undefined') return 'TERMINAL';
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#c64') return 'C64';
+    if (hash === '#ti') return 'TI99';
+    if (hash === '#apple') return 'APPLE_II';
+    return 'TERMINAL';
+  });
   const [game, setGame] = useState<StarTrekGame | null>(null);
   const [showCredits, setShowCredits] = useState(false);
-
-  // Handle URL Hash on Mount
-  useEffect(() => {
-    const hash = window.location.hash.toLowerCase();
-    if (hash === '#modern') {
-      setMode('modern');
-    } else if (hash === '#c64') {
-      setMode('classic');
-      setTheme('C64');
-    } else if (hash === '#ti') {
-      setMode('classic');
-      setTheme('TI99');
-    } else if (hash === '#apple') {
-      setMode('classic');
-      setTheme('APPLE_II');
-    }
-  }, []);
 
   // Sync URL Hash on state change
   useEffect(() => {

@@ -39,7 +39,7 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Original BASIC Game (1978)</h3>
                             <div className="space-y-2">
                                 <p className="text-2xl text-slate-200 font-serif">Original logic and design by <span className="text-white font-bold">Mike Mayfield</span>.</p>
-                                <p className="text-lg text-slate-400">Modified and published by <span className="text-slate-200">Dave Ahl</span> in "101 BASIC Computer Games".</p>
+                                <p className="text-lg text-slate-400">Modified and published by <span className="text-slate-200">Dave Ahl</span> in &quot;101 BASIC Computer Games&quot;.</p>
                                 <p className="text-lg text-slate-400">Major debug and enhancements by <span className="text-slate-200">Bob Leedom</span> (1974).</p>
                                 <p className="text-lg text-slate-400 font-mono text-sm">Converted to Microsoft 8K BASIC by John Gorders (1978).</p>
                                 <p className="text-md text-slate-500 pt-2 italic">
@@ -62,7 +62,7 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                              <div className="space-y-4 text-sm font-mono text-slate-400 border-l-2 border-slate-800 pl-4">
                                  <div>
                                      <div className="text-blue-400 font-bold mb-1">Navigation Update</div>
-                                     <p>Restored original BASIC navigation algorithm. Movement now uses a lookup table with linear interpolation instead of trigonometric functions. This restores the authentic "faster diagonal movement" (approx 1.4x speed) present in the 1970s original.</p>
+                                     <p>Restored original BASIC navigation algorithm. Movement now uses a lookup table with linear interpolation instead of trigonometric functions. This restores the authentic &quot;faster diagonal movement&quot; (approx 1.4x speed) present in the 1970s original.</p>
                                  </div>
                              </div>
                         </section>

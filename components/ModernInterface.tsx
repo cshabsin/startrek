@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StarTrekGame, Line } from '../lib/startrek';
 
 interface ModernInterfaceProps {
@@ -8,7 +8,7 @@ interface ModernInterfaceProps {
 }
 
 export default function ModernInterface({ game }: ModernInterfaceProps) {
-    const [tick, setTick] = useState(0);
+    const [, setTick] = useState(0);
     const [logs, setLogs] = useState<Line[]>([]);
     
     // UI State
@@ -32,13 +32,13 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     const logsEndRef = useRef<HTMLDivElement>(null);
     const courseInputRef = useRef<HTMLInputElement>(null);
 
-    const refresh = () => {
+    const refresh = useCallback(() => {
         setTick(t => t + 1);
         setLogs(game.getFullLog());
         // Clear pending buffer so we don't double count if getOutput is called elsewhere
         game.getOutput(); 
         setViewState(game.getSectorData());
-    };
+    }, [game]);
 
     useEffect(() => {
         refresh();
@@ -46,7 +46,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         const listener = () => refresh();
         game.subscribe(listener);
         return () => game.unsubscribe(listener);
-    }, [game]);
+    }, [game, refresh]);
 
     useEffect(() => {
         logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -270,7 +270,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 let content = null;
-                let bgClass = "bg-gray-900 border-gray-800";
+                const bgClass = "bg-gray-900 border-gray-800";
                 const isShip = !animatingShip && x === entities.x && y === entities.y;
                 if (isShip) {
                     content = <div className="w-[80%] h-[80%]"><EnterpriseIcon /></div>;

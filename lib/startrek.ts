@@ -488,15 +488,15 @@ export class StarTrekGame {
         if (isNaN(warp) || warp < 0) return;
         
         const maxWarp = this.damage[0] < 0 ? 0.2 : 8;
-        if (this.damage[0] < 0 && warp > 0.2) {
-           this.print("WARP ENGINES ARE DAMAGED. MAXIUM SPEED = WARP 0.2");
-           return;
+        if (warp > maxWarp) {
+            if (this.damage[0] < 0) {
+                this.print("WARP ENGINES ARE DAMAGED. MAXIUM SPEED = WARP 0.2");
+            } else {
+                this.print(`   CHIEF ENGINEER SCOTT REPORTS 'THE ENGINES WON'T TAKE WARP ${warp}!'`);
+            }
+            return;
         }
         if (warp === 0) return;
-        if (warp > 8) {
-             this.print(`   CHIEF ENGINEER SCOTT REPORTS 'THE ENGINES WON'T TAKE WARP ${warp}!'`);
-             return;
-        }
 
         // Direction Lookup Table (Row, Col) = (y, x)
         // Indexes correspond to Course 1-9.
@@ -557,7 +557,6 @@ export class StarTrekGame {
         
         let lastSectX = this.sectX;
         let lastSectY = this.sectY;
-        let collision = false;
 
         // Move sector by sector to check for collisions
         for (let i = 0; i < numSectors; i++) {
@@ -583,7 +582,6 @@ export class StarTrekGame {
                         this.print(`WARP ENGINES SHUT DOWN AT SECTOR ${sx+1},${sy+1} DUE TO BAD NAVIGATION`);
                         globalX -= dx;
                         globalY -= dy;
-                        collision = true;
                         break;
                     }
                     lastSectX = sx;
@@ -729,7 +727,6 @@ export class StarTrekGame {
         
      let tx = this.sectX;
      let ty = this.sectY;
-     let hit = false;
      const path: {x: number, y: number}[] = [];
         
      for (let step = 0; step < 10; step++) { 
@@ -752,14 +749,12 @@ export class StarTrekGame {
                 this.localKlingons.splice(kIdx, 1);
                 this.totalKlingons--;
                 this.galaxy[this.quadX][this.quadY] -= 100;
-                hit = true;
                 if (this.totalKlingons <= 0) this.winGame();
                 break;
             }
             
             if (this.localStars.some(s => s.x === rx && s.y === ry)) {
                 this.print(`STAR AT ${rx+1},${ry+1} ABSORBED TORPEDO ENERGY.`);
-                hit = true;
                 break;
             }
             
@@ -772,7 +767,6 @@ export class StarTrekGame {
                 this.print("THAT DOES IT, CAPTAIN!!  YOU ARE HEREBY RELIEVED OF COMMAND");
                 this.print("AND SENTENCED TO 99 STARDATES AT HARD LABOR ON CYGNUS 12!!");
                 this.state = 'ENDED';
-                hit = true;
                 break;
             }
      }
