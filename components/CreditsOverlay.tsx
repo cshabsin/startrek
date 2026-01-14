@@ -61,6 +61,10 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Changelog</h3>
                              <div className="space-y-4 text-sm font-mono text-slate-400 border-l-2 border-slate-800 pl-4">
                                  <div>
+                                     <div className="text-blue-400 font-bold mb-1">UI Enhancements & Fixes</div>
+                                     <p>Improved navigation interface with a clickable compass rose and a warp factor tooltip clarifying distance calculations (Warp 1 = 8 Sectors). Fixed floating-point precision issues in stardate displays and ensured navigation mode correctly exits when the game ends or when switching modes.</p>
+                                 </div>
+                                 <div>
                                      <div className="text-blue-400 font-bold mb-1">Navigation Update</div>
                                      <p>Restored original BASIC navigation algorithm. Movement now uses a lookup table with linear interpolation instead of trigonometric functions. This restores the authentic &quot;faster diagonal movement&quot; (approx 1.4x speed) present in the 1970s original.</p>
                                  </div>
