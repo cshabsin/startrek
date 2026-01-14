@@ -120,6 +120,10 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
         
         if (game.state === 'ENDED') {
             refresh();
+            setNavMode(false);
+            setFireMode(null);
+            setShieldMode(false);
+            setTargetCourse('');
             return;
         }
 
