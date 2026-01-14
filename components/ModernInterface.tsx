@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StarTrekGame, Line } from '../lib/startrek';
+import { IStarTrekGame, Line } from '../lib/game-interface';
 
 interface ModernInterfaceProps {
-    game: StarTrekGame;
+    game: IStarTrekGame;
 }
 
 export default function ModernInterface({ game }: ModernInterfaceProps) {

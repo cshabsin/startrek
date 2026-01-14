@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { StarTrekGame, Line } from '../lib/startrek';
+import { StarTrekGame } from '../lib/startrek';
+import { IStarTrekGame, Line } from '../lib/game-interface';
 import { ThemeType, THEMES } from '@/lib/themes';
 
 interface GameTerminalProps {
-    gameInstance?: StarTrekGame;
+    gameInstance?: IStarTrekGame;
     theme?: ThemeType;
 }
 
 export default function GameTerminal({ gameInstance, theme = 'TERMINAL' }: GameTerminalProps) {
   const [lines, setLines] = useState<Line[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const gameRef = useRef<StarTrekGame | null>(null);
+  const gameRef = useRef<IStarTrekGame | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

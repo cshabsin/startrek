@@ -1,8 +1,13 @@
 import { IStarTrekGame, Line, GameState, SectorData, MissionStats, DamageReportItem } from './game-interface';
 
+// Re-export types for convenience
 export type { Line, GameState };
 
-export class StarTrekGame implements IStarTrekGame {
+/**
+ * StarTrekGameV2 - Based on Super Star Trek (1978) - 'superstartrek2.bas'
+ * Features: Starbases under attack, Self-Destruct, Communications, etc.
+ */
+export class StarTrekGameV2 implements IStarTrekGame {
   // Game Settings / Constants
   private readonly GALAXY_SIZE = 8;
   private readonly SECTOR_SIZE = 8;
@@ -57,6 +62,10 @@ export class StarTrekGame implements IStarTrekGame {
 
   // Input handling state
   private inputCallback: ((input: string) => void) | null = null;
+
+  // V2 Specific State
+  private rank: number = 5; // Default rank
+  private starbaseAttack: { active: boolean, quadX: number, quadY: number, deadline: number } | null = null;
 
   constructor() {
     this.init();
@@ -155,19 +164,10 @@ export class StarTrekGame implements IStarTrekGame {
        this.stardateEnd = this.stardateStart + this.totalKlingons + 1;
     }
     this.startKlingons = this.totalKlingons;
+    this.starbaseAttack = null;
 
-    // Ensure at least one starbase if none generated? BASIC does this at line 1100
-    // "IF B9 <> 0 THEN 1200" -> If >0 continue. 
-    // If B9=0, it forces one at a random location.
     if (this.totalStarbases === 0) {
       if (this.galaxy[this.quadX][this.quadY] < 200) {
-        this.galaxy[this.quadX][this.quadY] += 120; // Add K=1, B=1? No, wait. 
-        // Line 1150: G(Q1,Q2) = G(Q1,Q2) + 120. K9=K9+1. 
-        // This adds 1 Klingon (100) and 2 Starbases (20)? No.
-        // BASIC: K3*100 + B3*10 + S. 
-        // +120 means +1 Klingon, +2 Starbases? 
-        // Wait, line 1160: B9=1. G+=10. 
-        // Let's simplified: If 0 starbases, add one at random.
          const qx = Math.floor(Math.random() * 8);
          const qy = Math.floor(Math.random() * 8);
          this.galaxy[qx][qy] += 10;
@@ -176,6 +176,7 @@ export class StarTrekGame implements IStarTrekGame {
     }
 
     // Intro Text
+    this.print("--- SUPER STAR TREK II ---");
     this.print("YOUR ORDERS ARE AS FOLLOWS:");
     this.print(`     DESTROY THE ${this.totalKlingons} KLINGON WARSHIPS WHICH HAVE INVADED`);
     this.print("   THE GALAXY BEFORE THEY CAN ATTACK FEDERATION HEADQUARTERS");
@@ -187,7 +188,6 @@ export class StarTrekGame implements IStarTrekGame {
   }
 
   private enterQuadrant(suppressLogs: boolean = false) {
-    // Populate local entities based on galaxy map
     const val = this.galaxy[this.quadX][this.quadY];
     const kCount = Math.floor(val / 100);
     const bCount = Math.floor((val % 100) / 10);
@@ -196,10 +196,6 @@ export class StarTrekGame implements IStarTrekGame {
     this.localKlingons = [];
     this.localStarbases = [];
     this.localStars = [];
-    
-    // BASIC logic for positioning is random empty spots
-    // We need to keep track of occupied sectors to avoid collisions during generation
-    // Enterprise is at sectX, sectY
     
     const isOccupied = (x: number, y: number) => {
       if (x === this.sectX && y === this.sectY) return true;
@@ -220,8 +216,6 @@ export class StarTrekGame implements IStarTrekGame {
     
     for (let i = 0; i < kCount; i++) {
       const pos = findEmpty();
-      // Klingon shield/energy: 200 * (0.5 + RND) -> 100 to 300? 
-      // BASIC Line 440: S9=200. Line 1780: S9*(0.5+RND(1))
       this.localKlingons.push({ ...pos, energy: 200 * (0.5 + Math.random()) });
     }
     
@@ -233,8 +227,15 @@ export class StarTrekGame implements IStarTrekGame {
       this.localStars.push(findEmpty());
     }
     
-    // Update known galaxy
     this.knownGalaxy[this.quadX][this.quadY] = this.galaxy[this.quadX][this.quadY];
+
+    // Check for Starbase Rescue
+    if (this.starbaseAttack && this.starbaseAttack.active) {
+        if (this.quadX === this.starbaseAttack.quadX && this.quadY === this.starbaseAttack.quadY) {
+            this.print("YOU ARRIVED IN TIME! STARBASE SAVED!");
+            this.starbaseAttack.active = false;
+        }
+    }
 
     const quadrantName = this.getRegionName(this.quadX, this.quadY);
     this.print("");
@@ -262,7 +263,6 @@ export class StarTrekGame implements IStarTrekGame {
     const originalInput = input;
     input = input.trim().toUpperCase();
     
-    // Echo input to log
     const echoLine = { text: `> ${originalInput}`, color: 'inherit' };
     this.fullLog.push(echoLine);
     this.notify();
@@ -274,7 +274,6 @@ export class StarTrekGame implements IStarTrekGame {
       return;
     }
 
-    // Main Command Loop
     if (input === 'NAV') this.commandNav();
     else if (input === 'SRS') this.printShortRangeScan();
     else if (input === 'LRS') this.longRangeScan();
@@ -314,7 +313,6 @@ export class StarTrekGame implements IStarTrekGame {
   // --- Commands ---
 
   private updateSensorStatus() {
-    // Check Docking
     let adjacentToStarbase = false;
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
@@ -364,7 +362,6 @@ export class StarTrekGame implements IStarTrekGame {
       } else {
           line = " ".repeat(24);
       }
-      // Append Status Info to the right
       let status = "";
       if (y === 0) status = `        STARDATE          ${this.stardate.toFixed(1)}`;
       if (y === 1) status = `        CONDITION         ${this.getCondition()}`;
@@ -384,7 +381,7 @@ export class StarTrekGame implements IStarTrekGame {
   private getCondition() {
     if (this.dockStatus) return "DOCKED";
     if (this.localKlingons.length > 0) return "*RED*";
-    if (this.energy < 300) return "YELLOW"; // BASIC: E < E0*.1 (3000*.1 = 300)
+    if (this.energy < 300) return "YELLOW";
     return "GREEN";
   }
 
@@ -447,7 +444,7 @@ export class StarTrekGame implements IStarTrekGame {
             this.knownGalaxy[x][y] = this.galaxy[x][y];
             row.push(this.galaxy[x][y]);
         } else {
-            row.push(-1); // Out of bounds
+            row.push(-1);
         }
       }
       data.push(row);
@@ -462,16 +459,13 @@ export class StarTrekGame implements IStarTrekGame {
     public executeRest(days: number) {
       if (days <= 0) return;
       
-      this.stardate += days;
-      if (this.stardate > this.stardateEnd) {
-          this.gameOver();
-          return;
-      }
+      this.advanceTime(days);
+      if (this.state === 'ENDED') return;
       
       this.repairSystem(days);
       this.klingonsMoveAndFire();
       this.print(`--- RESTING FOR ${days.toFixed(1)} STARDATES ---`);
-      this.printShortRangeScan(true); // Silent update
+      this.printShortRangeScan(true);
   }
 
   public executeNav(course: number, warp: number, suppressLogs: boolean = false) {
@@ -493,11 +487,8 @@ export class StarTrekGame implements IStarTrekGame {
         }
         if (warp === 0) return;
 
-        // Direction Lookup Table (Row, Col) = (y, x)
-        // Indexes correspond to Course 1-9.
-        // C(1)=0,1 (East); C(2)=-1,1 (NE); C(3)=-1,0 (N); ...
         const C = [
-            [0,0], // Dummy
+            [0,0],
             [0, 1],   // 1: East
             [-1, 1],  // 2: NE
             [-1, 0],  // 3: North
@@ -511,25 +502,14 @@ export class StarTrekGame implements IStarTrekGame {
 
         const ic = Math.floor(course);
         const frac = course - ic;
-        const nextC = ic + 1; // Course 9 is handled by C[9] which matches C[1]
+        const nextC = ic + 1;
 
-        // Linear Interpolation of direction vector components
-        // Note: dy corresponds to Row Change (BASIC X1), dx to Col Change (BASIC X2)
-        // This linear interpolation results in faster movement on diagonals (approx 1.41x)
-        // compared to cardinal directions. This is "correct" for the original BASIC algorithm
-        // and is preserved here for historical accuracy.
         const dy = C[ic][0] + (C[nextC][0] - C[ic][0]) * frac;
         const dx = C[ic][1] + (C[nextC][1] - C[ic][1]) * frac;
         
-        // Basic movement logic: N = INT(W1 * 8 + 0.5)
         const numSectors = Math.floor(warp * 8 + 0.5);
-        if (numSectors < 1 && warp > 0) {
-            // Ensure we move at least one sector if warp is set
-            // (Unless we want to allow micro-moves that don't change sector yet)
-            // But for playability, let's follow BASIC.
-        }
 
-        const energyRequired = numSectors + 10; // Simple cost
+        const energyRequired = numSectors + 10;
         if (this.energy < energyRequired) {
              this.print("ENGINEERING REPORTS   'INSUFFICIENT ENERGY AVAILABLE");
              this.print(`                       FOR MANEUVERING AT WARP ${warp}!'`);
@@ -541,11 +521,8 @@ export class StarTrekGame implements IStarTrekGame {
         this.repairSystem(warp); 
         
         const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
-        this.stardate += timeSpent;
-        if (this.stardate > this.stardateEnd) {
-            this.gameOver();
-            return;
-        }
+        this.advanceTime(timeSpent);
+        if (this.state === 'ENDED') return;
 
         let globalX = this.quadX * 8 + this.sectX;
         let globalY = this.quadY * 8 + this.sectY;
@@ -553,16 +530,13 @@ export class StarTrekGame implements IStarTrekGame {
         let lastSectX = this.sectX;
         let lastSectY = this.sectY;
 
-        // Move sector by sector to check for collisions
         for (let i = 0; i < numSectors; i++) {
             globalX += dx;
             globalY += dy;
             
-            // Local collision check
             const currentQX = Math.floor(globalX / 8);
             const currentQY = Math.floor(globalY / 8);
             
-            // If still in same quadrant, check for objects
             if (currentQX === this.quadX && currentQY === this.quadY) {
                 const sx = Math.floor(globalX % 8);
                 const sy = Math.floor(globalY % 8);
@@ -595,7 +569,6 @@ export class StarTrekGame implements IStarTrekGame {
              this.print("  'PERMISSION TO ATTEMPT CROSSING OF GALACTIC PERIMETER");
              this.print("  IS HEREBY *DENIED*.  SHUT DOWN YOUR ENGINES.'");
              
-             // Clamp to galaxy boundaries
              globalX = Math.max(0, Math.min(63.9, globalX));
              globalY = Math.max(0, Math.min(63.9, globalY));
              
@@ -648,6 +621,9 @@ export class StarTrekGame implements IStarTrekGame {
     
     // Capture targets for visualization before they might be destroyed
     const targets = this.localKlingons.map(k => ({x: k.x, y: k.y}));
+
+    this.advanceTime(0.05);
+    if (this.state === 'ENDED') return targets;
 
     this.energy -= amt;
     this.print(`PHASERS FIRED: ${amt} UNITS.`);
@@ -717,6 +693,9 @@ export class StarTrekGame implements IStarTrekGame {
         
      this.energy -= 2;
      this.torpedoes--;
+
+     this.advanceTime(0.05);
+     if (this.state === 'ENDED') return null;
         
      const angle = (1 - course) * (Math.PI / 4);
      const dx = Math.cos(angle);
@@ -837,7 +816,7 @@ export class StarTrekGame implements IStarTrekGame {
       if (repairTime >= 1) repairTime = 0.9;
       
       this.damage.fill(0);
-      this.stardate += (repairTime + 0.1);
+      this.advanceTime(repairTime + 0.1);
       this.print(`TECHNICIANS HAVE COMPLETED REPAIRS.`);
       this.print(`STARDATE IS NOW ${this.stardate.toFixed(1)}`);
   }
@@ -973,16 +952,6 @@ export class StarTrekGame implements IStarTrekGame {
   private printDistDir(x1: number, y1: number, x2: number, y2: number) {
       const dx = x2 - x1;
       const dy = y2 - y1;
-      // Direction:
-      // 1=East(0), 3=North(-PI/2), 5=West(PI), 7=South(PI/2)
-      // Math.atan2(dy, dx) gives angle in radians from X+ axis.
-      // angle 0 -> East -> Course 1.
-      // angle -PI/2 -> North -> Course 3.
-      // angle PI -> West -> Course 5.
-      // angle PI/2 -> South -> Course 7.
-      // Formula: Course = 1 - angle / (PI/4).
-      // Check: 1 - (-PI/2)/(PI/4) = 1 - (-2) = 3. Correct.
-      // Check: 1 - (PI)/(PI/4) = 1 - 4 = -3 -> +8 = 5. Correct.
       const angle = Math.atan2(dy, dx);
       let course = 1 - angle / (Math.PI / 4);
       if (course < 1) course += 8;
@@ -994,7 +963,6 @@ export class StarTrekGame implements IStarTrekGame {
   }
 
   public getRegionName(x: number, y: number, includeRoman: boolean = true): string {
-      // x, y are 0-7. BASIC uses 1-8.
       const row = y + 1;
       const col = x + 1;
       
@@ -1025,9 +993,6 @@ export class StarTrekGame implements IStarTrekGame {
   private klingonsMoveAndFire() {
       if (this.state === 'ENDED' || this.localKlingons.length === 0) return;
       
-      // Klingon Turn
-      // Move? BASIC line 2590 just fires. It says "KLINGONS MOVE/FIRE" but code mainly fires.
-      
       for (const k of this.localKlingons) {
           if (this.state === 'ENDED') break;
           const dist = Math.sqrt(Math.pow(k.x - this.sectX, 2) + Math.pow(k.y - this.sectY, 2));
@@ -1049,7 +1014,6 @@ export class StarTrekGame implements IStarTrekGame {
   
   private repairSystem(time: number) {
       if (this.state === 'ENDED') return;
-      // BASIC repairs devices over time
       for (let i = 0; i < 8; i++) {
           if (this.damage[i] < 0) {
               this.damage[i] += time; // Simple repair
@@ -1061,7 +1025,6 @@ export class StarTrekGame implements IStarTrekGame {
           }
       }
       
-      // Random damage (Ship system failures)
       if (this.state === 'ENDED') return;
       if (Math.random() > 0.9) {
           const dev = Math.floor(Math.random() * 8);
@@ -1087,6 +1050,87 @@ export class StarTrekGame implements IStarTrekGame {
       const efficiency = 1000 * Math.pow(this.startKlingons / (this.stardate - this.stardateStart), 2);
       this.print(`YOUR EFFICIENCY RATING IS ${Math.floor(efficiency)}`);
       this.state = 'ENDED';
+  }
+
+  private advanceTime(time: number) {
+      if (this.state === 'ENDED') return;
+      this.stardate += time;
+      if (this.stardate > this.stardateEnd) {
+          this.gameOver();
+          return;
+      }
+      this.checkForStarbaseAttack();
+  }
+
+  private checkForStarbaseAttack() {
+      // Check if existing attack is too late
+      if (this.starbaseAttack && this.starbaseAttack.active) {
+          if (this.stardate > this.starbaseAttack.deadline) {
+              this.print("TOO LATE! STARBASE DESTROYED.");
+              this.starbaseAttack.active = false;
+              
+              const qx = this.starbaseAttack.quadX;
+              const qy = this.starbaseAttack.quadY;
+              
+              // Deduct starbase from galaxy map
+              this.galaxy[qx][qy] -= 10;
+              this.totalStarbases--;
+              
+              // Update known galaxy if we know about it
+              if (this.knownGalaxy[qx][qy] !== 0) {
+                  this.knownGalaxy[qx][qy] -= 10;
+              }
+              
+              if (this.totalStarbases === 0) {
+                  this.print("THE FEDERATION HAS LOST ALL STARBASES.");
+                  this.print("THE EMPIRE CANNOT SURVIVE.");
+                  this.gameOver();
+              }
+          } else {
+              this.print(`${(this.starbaseAttack.deadline - this.stardate).toFixed(1)} STARDATES LEFT TO SAVE STARBASE.`);
+          }
+          return;
+      }
+
+      // Roll for new attack
+      // BASIC: IF (RND(1)>.01*R9) OR (B9=0) THEN RETURN
+      // R9 is Rank (1-12). 
+      // If Rank 5, .05. If Rnd > .05, return.
+      // So 5% chance per update.
+      if (Math.random() > 0.01 * this.rank || this.totalStarbases === 0) {
+          return;
+      }
+
+      // Pick a random starbase
+      // BASIC logic picks *last* one found in a search, but randomly aborts search?
+      // I'll just find all starbases and pick one random.
+      const bases = [];
+      for (let x = 0; x < 8; x++) {
+          for (let y = 0; y < 8; y++) {
+              if (Math.floor((this.galaxy[x][y] % 100) / 10) > 0) {
+                  bases.push({ x, y });
+              }
+          }
+      }
+      
+      if (bases.length === 0) return;
+      
+      const target = bases[Math.floor(Math.random() * bases.length)];
+      
+      // Calculate deadline
+      // BASIC: TK=T+.09*SQR((Q1-K1)^2+(Q2-K2)^2)*(10-R9)
+      const dist = Math.sqrt(Math.pow(this.quadX - target.x, 2) + Math.pow(this.quadY - target.y, 2));
+      const timeToSave = 0.09 * dist * (10 - this.rank) + 1; // +1 buffer? BASIC adds +1 line 3290
+      
+      this.starbaseAttack = {
+          active: true,
+          quadX: target.x,
+          quadY: target.y,
+          deadline: this.stardate + timeToSave
+      };
+      
+      this.print(`!!! STARBASE IN QUADRANT ${target.x + 1},${target.y + 1} IS UNDER ATTACK!!`);
+      this.print(`YOU HAVE ${(timeToSave).toFixed(1)} STARDATES TO SAVE IT!`);
   }
 
 }

@@ -6,6 +6,8 @@ import GameTerminal from '@/components/GameTerminal';
 import ModernInterface from '@/components/ModernInterface';
 import CreditsOverlay from '@/components/CreditsOverlay';
 import { StarTrekGame } from '@/lib/startrek';
+import { StarTrekGameV2 } from '@/lib/startrek2';
+import { IStarTrekGame } from '@/lib/game-interface';
 import { ThemeType, THEMES } from '@/lib/themes';
 
 export default function Home() {
@@ -21,7 +23,8 @@ export default function Home() {
     if (hash === '#apple') return 'APPLE_II';
     return 'TERMINAL';
   });
-  const [game, setGame] = useState<StarTrekGame | null>(null);
+  const [engine, setEngine] = useState<'v1' | 'v2'>('v1');
+  const [game, setGame] = useState<IStarTrekGame | null>(null);
   const [showCredits, setShowCredits] = useState(false);
 
   // Sync URL Hash on state change
@@ -41,18 +44,12 @@ export default function Home() {
   }, [mode, theme]);
 
   useEffect(() => {
-      // Use timeout to avoid immediate state set warning if StrictMode is on,
-      // or just accept it's standard client-only init.
-      // Actually the warning says "synchronously".
-      // Let's defer it slightly or ignore if we know it's fine (it is for mount).
-      // Better yet, just use a ref for the game and force update?
-      // No, we need state to trigger re-render when game is ready.
-      // The warning is about "Cascading renders".
-      // Since this is effect on mount, it's unavoidable if we want to render based on it.
-      // But wrapping in timeout or requestAnimationFrame helps.
-      const timer = setTimeout(() => setGame(new StarTrekGame()), 0);
+      const timer = setTimeout(() => {
+          if (engine === 'v1') setGame(new StarTrekGame());
+          else setGame(new StarTrekGameV2());
+      }, 0);
       return () => clearTimeout(timer);
-  }, []);
+  }, [engine]);
 
   return (
     <main className="min-h-screen bg-black relative">
@@ -70,6 +67,14 @@ export default function Home() {
             ))}
           </select>
         )}
+        <select
+            value={engine}
+            onChange={(e) => setEngine(e.target.value as 'v1' | 'v2')}
+            className="px-2 py-1 rounded text-sm font-bold border bg-black text-blue-400 border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+            <option value="v1">SST (1978)</option>
+            <option value="v2">SST II (Advanced)</option>
+        </select>
         <button 
             onClick={() => setMode('classic')}
             className={`px-3 py-1 rounded text-sm font-bold border ${mode === 'classic' ? 'bg-green-700 text-black border-green-500' : 'bg-black text-green-700 border-green-700'}`}
