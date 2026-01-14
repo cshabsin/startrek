@@ -768,7 +768,8 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 border border-slate-600 p-2 rounded shadow-xl text-[10px] normal-case font-normal text-slate-300 hidden group-hover:block z-50 pointer-events-none">
                                                 <div className="font-bold text-blue-400 mb-1">Warp Speed Guide</div>
                                                 <div>Warp 1.0 = 1 Quadrant</div>
-                                                <div>Warp 0.1 = 1 Sector</div>
+                                                <div className="text-[9px] text-slate-500 mb-1">(8 Sectors)</div>
+                                                <div>Warp 0.125 = 1 Sector</div>
                                                 <div className="mt-1 text-slate-500 italic">Example: To move 3 sectors, use Warp 0.35</div>
                                             </div>
                                         </div>
