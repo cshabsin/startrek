@@ -304,7 +304,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         const distSectors = Math.max(Math.abs(dx), Math.abs(dy));
                         let autoWarp = distSectors / 8;
                         autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
-                        autoWarp = Math.round(autoWarp * 20) / 20;
+                        autoWarp = Math.floor(autoWarp * 20) / 20;
                         
                         // Set State (Do not execute yet)
                         setTargetCourse(parseFloat(course.toFixed(2)));
