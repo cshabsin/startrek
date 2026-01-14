@@ -302,9 +302,14 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                         // Calculate Auto-Warp
                         // BASIC algo moves in Chebyshev distance (max(dx, dy)) due to non-normalized vectors
                         const distSectors = Math.max(Math.abs(dx), Math.abs(dy));
-                        let autoWarp = distSectors / 8;
+                        
+                        // Use a lookup for "clean" warp factors that cover the distance
+                        // Valid range for N sectors: [(N-0.5)/8, (N+0.5)/8)
+                        const warpLookup = [0, 0.10, 0.20, 0.35, 0.50, 0.60, 0.75, 0.90, 1.0];
+                        let autoWarp = distSectors <= 8 ? warpLookup[distSectors] : 1.0;
+                        
+                        // Clamp and Round
                         autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
-                        autoWarp = Math.floor(autoWarp * 20) / 20;
                         
                         // Set State (Do not execute yet)
                         setTargetCourse(parseFloat(course.toFixed(2)));
@@ -754,13 +759,17 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 <div className="space-y-1">
                                     <label className="flex items-center justify-center gap-2 text-xs font-bold uppercase text-slate-400">
                                         Warp Factor: {warpFactor}
-                                        <div className="relative group">
-                                            <div className="w-4 h-4 rounded-full border border-slate-500 flex items-center justify-center text-[9px] cursor-help hover:bg-slate-700 hover:text-white transition-colors">i</div>
+                                        <div className="relative group flex items-center">
+                                            <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-500 hover:text-white cursor-help transition-colors">
+                                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+                                                <circle cx="12" cy="7" r="1.5" fill="currentColor" />
+                                                <rect x="11" y="10" width="2" height="7" rx="0.5" fill="currentColor" />
+                                            </svg>
                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 border border-slate-600 p-2 rounded shadow-xl text-[10px] normal-case font-normal text-slate-300 hidden group-hover:block z-50 pointer-events-none">
                                                 <div className="font-bold text-blue-400 mb-1">Warp Speed Guide</div>
                                                 <div>Warp 1.0 = 1 Quadrant</div>
                                                 <div>Warp 0.1 = 1 Sector</div>
-                                                <div className="mt-1 text-slate-500 italic">Example: To move 3 sectors, use Warp 0.3</div>
+                                                <div className="mt-1 text-slate-500 italic">Example: To move 3 sectors, use Warp 0.35</div>
                                             </div>
                                         </div>
                                     </label>
