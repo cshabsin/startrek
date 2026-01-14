@@ -636,20 +636,23 @@ export class StarTrekGame {
   public executePhasers(amt: number) {
     if (this.damage[3] < 0) {
         this.print("PHASERS INOPERATIVE");
-        return;
+        return [];
     }
     if (this.localKlingons.length === 0) {
         this.print("SCIENCE OFFICER SPOCK REPORTS  'SENSORS SHOW NO ENEMY SHIPS");
         this.print("                                IN THIS QUADRANT'");
-        return;
+        return [];
     }
     
-    if (isNaN(amt) || amt <= 0) return;
+    if (isNaN(amt) || amt <= 0) return [];
     if (amt > this.energy) {
         this.print("ENERGY AVAILABLE EXCEEDED.");
-        return;
+        return [];
     }
     
+    // Capture targets for visualization before they might be destroyed
+    const targets = this.localKlingons.map(k => ({x: k.x, y: k.y}));
+
     this.energy -= amt;
     this.print(`PHASERS FIRED: ${amt} UNITS.`);
     
@@ -670,7 +673,7 @@ export class StarTrekGame {
                  this.galaxy[this.quadX][this.quadY] -= 100;
                  if (this.totalKlingons <= 0) {
                      this.winGame();
-                     return;
+                     return targets;
                  }
              } else {
                  this.print(`   (SENSORS SHOW ${Math.floor(k.energy)} UNITS REMAINING)`);
@@ -681,6 +684,7 @@ export class StarTrekGame {
     }
     
     this.klingonsMoveAndFire();
+    return targets;
   }
 
   private commandPhasers() {

@@ -15,6 +15,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     const [viewState, setViewState] = useState(game.getSectorData());
     const [animatingShip, setAnimatingShip] = useState<{x: number, y: number} | null>(null);
     const [animatingTorpedo, setAnimatingTorpedo] = useState<{x: number, y: number} | null>(null);
+    const [phaserTargets, setPhaserTargets] = useState<{x: number, y: number}[] | null>(null);
     const [overlay, setOverlay] = useState<'LRS' | 'MAP' | 'STATUS' | null>(null);
 
     // Command State
@@ -454,6 +455,24 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                 <div className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_red] ring-2 ring-white/50"></div>
                              </div>
                         )}
+
+                        {phaserTargets && (
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-50">
+                                {phaserTargets.map((t, i) => (
+                                    <line 
+                                        key={i}
+                                        x1={`${(viewState.x / 8) * 100 + 6.25}%`} 
+                                        y1={`${(viewState.y / 8) * 100 + 6.25}%`}
+                                        x2={`${(t.x / 8) * 100 + 6.25}%`}
+                                        y2={`${(t.y / 8) * 100 + 6.25}%`}
+                                        stroke="red"
+                                        strokeWidth="2"
+                                        strokeOpacity="0.8"
+                                        className="drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]"
+                                    />
+                                ))}
+                            </svg>
+                        )}
                         
                         {/* Overlays (Status, LRS, Map) */}
                         {overlay === 'STATUS' && (
@@ -854,7 +873,18 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     <button onClick={() => setPhaserEnergy(Math.min(500, Math.floor(game.energy)))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">500</button>
                                     <button onClick={() => setPhaserEnergy(Math.floor(game.energy))} className="bg-slate-700 text-[10px] py-1 rounded hover:bg-slate-600 text-slate-300">MAX</button>
                                 </div>
-                                <button onClick={() => exec(() => game.executePhasers(phaserEnergy))} className="w-full bg-orange-600 py-2 rounded text-xs font-bold hover:bg-orange-500 shadow-lg">FIRE PHASERS</button>
+                                <button onClick={() => {
+                                    const targets = game.executePhasers(phaserEnergy);
+                                    if (targets && targets.length > 0) {
+                                        setPhaserTargets(targets);
+                                        setTimeout(() => setPhaserTargets(null), 250);
+                                    }
+                                    refresh();
+                                    setNavMode(false);
+                                    setFireMode(null);
+                                    setShieldMode(false);
+                                    setTargetCourse('');
+                                }} className="w-full bg-orange-600 py-2 rounded text-xs font-bold hover:bg-orange-500 shadow-lg">FIRE PHASERS</button>
                             </div>
                         )}
                         {fireMode === 'TOR' && (
