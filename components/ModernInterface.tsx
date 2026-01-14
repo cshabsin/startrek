@@ -699,7 +699,7 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                 {/* Right Panel */}
                 <div className="w-1/4 bg-slate-900/50 p-4 border-l border-slate-800 flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => { setNavMode(!navMode); setFireMode(null); setShieldMode(false); setComputerMode(false); setTargetCourse(''); }}
+                        <button onClick={() => { setNavMode(!navMode); setOverlay(null); setFireMode(null); setShieldMode(false); setComputerMode(false); setTargetCourse(''); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${navMode ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700 text-blue-400'}`}>NAV</button>
                         <button onClick={() => { setShieldMode(!shieldMode); setNavMode(false); setFireMode(null); setComputerMode(false); }}
                             className={`p-2 rounded font-bold text-xs transition-colors ${shieldMode ? 'bg-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-blue-300'}`}>SHIELDS</button>
