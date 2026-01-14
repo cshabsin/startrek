@@ -168,7 +168,12 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                     const x = 48 + r * Math.cos(angleRad);
                     const y = 48 + r * Math.sin(angleRad);
                     return (
-                        <div key={i} className="absolute text-[8px] font-bold text-slate-500 -translate-x-1/2 -translate-y-1/2" style={{ left: x, top: y }}>
+                        <div 
+                            key={i} 
+                            className="absolute text-[8px] font-bold text-slate-500 -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:text-white transition-colors" 
+                            style={{ left: x, top: y }}
+                            onClick={() => setTargetCourse(i + 1)}
+                        >
                             {label.split(' ')[0]}
                         </div>
                     );
@@ -747,7 +752,18 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold uppercase text-slate-400 text-center">Warp Factor: {warpFactor}</label>
+                                    <label className="flex items-center justify-center gap-2 text-xs font-bold uppercase text-slate-400">
+                                        Warp Factor: {warpFactor}
+                                        <div className="relative group">
+                                            <div className="w-4 h-4 rounded-full border border-slate-500 flex items-center justify-center text-[9px] cursor-help hover:bg-slate-700 hover:text-white transition-colors">i</div>
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 border border-slate-600 p-2 rounded shadow-xl text-[10px] normal-case font-normal text-slate-300 hidden group-hover:block z-50 pointer-events-none">
+                                                <div className="font-bold text-blue-400 mb-1">Warp Speed Guide</div>
+                                                <div>Warp 1.0 = 1 Quadrant</div>
+                                                <div>Warp 0.1 = 1 Sector</div>
+                                                <div className="mt-1 text-slate-500 italic">Example: To move 3 sectors, use Warp 0.3</div>
+                                            </div>
+                                        </div>
+                                    </label>
                                     <input 
                                         type="range" 
                                         min="0.05" 
