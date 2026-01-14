@@ -183,7 +183,7 @@ export class StarTrekGame {
     this.print("YOUR ORDERS ARE AS FOLLOWS:");
     this.print(`     DESTROY THE ${this.totalKlingons} KLINGON WARSHIPS WHICH HAVE INVADED`);
     this.print("   THE GALAXY BEFORE THEY CAN ATTACK FEDERATION HEADQUARTERS");
-    this.print(`   ON STARDATE ${this.stardateEnd}   THIS GIVES YOU ${this.stardateEnd - this.stardateStart} DAYS.`);
+    this.print(`   ON STARDATE ${this.stardateEnd.toFixed(1)}   THIS GIVES YOU ${(this.stardateEnd - this.stardateStart).toFixed(1)} DAYS.`);
     this.print(`   THERE ${this.totalStarbases === 1 ? 'IS' : 'ARE'} ${this.totalStarbases} STARBASE${this.totalStarbases === 1 ? '' : 'S'} IN THE GALAXY FOR RESUPPLYING YOUR SHIP`);
     this.print("");
     
@@ -370,7 +370,7 @@ export class StarTrekGame {
       }
       // Append Status Info to the right
       let status = "";
-      if (y === 0) status = `        STARDATE          ${Math.floor(this.stardate * 10) / 10}`;
+      if (y === 0) status = `        STARDATE          ${this.stardate.toFixed(1)}`;
       if (y === 1) status = `        CONDITION         ${this.getCondition()}`;
       if (y === 2) status = `        QUADRANT          ${this.quadX + 1},${this.quadY + 1}`;
       if (y === 3) status = `        REGION            ${this.getRegionName(this.quadX, this.quadY)}`;
@@ -429,13 +429,12 @@ export class StarTrekGame {
       return this.damage.map((val, i) => ({ name: this.damageNames[i], value: val }));
   }
 
-  public getMissionStats() {
-      return {
-          stardate: this.stardate,
-          stardateEnd: this.stardateEnd,
-          daysLeft: Math.floor((this.stardateEnd - this.stardate) * 10) / 10,
-          klingonsLeft: this.totalKlingons,
-          klingonsStart: this.startKlingons,
+     public getMissionStats() {
+        return {
+            stardate: this.stardate,
+            stardateEnd: this.stardateEnd,
+            daysLeft: parseFloat((this.stardateEnd - this.stardate).toFixed(1)),
+            klingonsLeft: this.totalKlingons,          klingonsStart: this.startKlingons,
           starbases: this.totalStarbases,
           dockStatus: this.dockStatus,
           condition: this.getCondition()
@@ -892,7 +891,7 @@ export class StarTrekGame {
       } else if (val === '1') {
           this.print("   STATUS REPORT:");
           this.print(`KLINGONS LEFT: ${this.totalKlingons}`);
-          this.print(`MISSION MUST BE COMPLETED IN ${Math.floor((this.stardateEnd - this.stardate)*10)/10} STARDATES`);
+          this.print(`MISSION MUST BE COMPLETED IN ${(this.stardateEnd - this.stardate).toFixed(1)} STARDATES`);
           this.print(`THE FEDERATION IS MAINTAINING ${this.totalStarbases} STARBASES IN THE GALAXY`);
           // Also print damage report
           this.print("DEVICE             STATE OF REPAIR");
@@ -1074,7 +1073,7 @@ export class StarTrekGame {
 
   private gameOver() {
       this.print("");
-      this.print("IT IS STARDATE " + this.stardate);
+      this.print("IT IS STARDATE " + this.stardate.toFixed(1));
       this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
       this.print(`THERE WERE ${this.totalKlingons} KLINGON BATTLE CRUISERS LEFT.`);
       this.state = 'ENDED';
