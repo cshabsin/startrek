@@ -144,6 +144,7 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
 
     const damageReport = game.getDamageReport();
     const missionStats = game.getMissionStats();
+    const activeAttack = game.getActiveStarbaseAttack();
 
     // Clamp warp factor if engines damaged
     const warpEnginesDamaged = damageReport[0].value < 0;
@@ -419,6 +420,24 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
 
                 {/* Center Panel */}
                 <div className="flex-1 p-8 flex flex-col items-center justify-center bg-slate-950 relative">
+                     {activeAttack && (
+                        <div className="w-full max-w-[600px] mb-4 bg-red-900/40 border-2 border-red-500 p-3 rounded-lg flex items-center gap-4 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)] z-20">
+                            <div className="bg-red-600 text-white font-black px-2 py-1 rounded text-xs tracking-tighter">RED ALERT</div>
+                            <div className="flex-1">
+                                <div className="text-xs font-bold text-red-400 uppercase">Starbase Under Attack</div>
+                                <div className="text-[10px] text-red-200/70 font-mono">
+                                    Quadrant {activeAttack.quadX + 1},{activeAttack.quadY + 1} ({game.getRegionName(activeAttack.quadX, activeAttack.quadY)}) • Deadline: {activeAttack.deadline.toFixed(1)}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setOverlay('MAP')}
+                                className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow-lg transition-colors"
+                            >
+                                VIEW MAP
+                            </button>
+                        </div>
+                     )}
+
                      {navMode && <div className="absolute top-4 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">NAVIGATION MODE: Enter Manual Course</div>}
                      {fireMode === 'TOR' && <div className="absolute top-4 bg-red-600 text-white px-4 py-1 rounded-full shadow-lg z-30 animate-pulse">WEAPON MODE: Enter Manual Course</div>}
                      
@@ -614,11 +633,14 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
                                     <div className="grid grid-cols-8 grid-rows-8 gap-1 w-full max-w-[450px] aspect-square shrink-0">
                                         {game.getGalaxyMap().map((col, x) => col.map((val, y) => {
                                             const isCurrent = x === game.quadX && y === game.quadY;
+                                            const isAttacked = activeAttack && x === activeAttack.quadX && y === activeAttack.quadY;
                                             return (
                                                 <div 
                                                     key={`${x},${y}`} 
                                                     className={`border border-slate-800 flex items-center justify-center text-[10px] font-mono cursor-pointer hover:bg-white/20 transition-colors
-                                                        ${isCurrent ? 'bg-blue-900/40 text-blue-200 border-blue-500' : 'bg-slate-900/40 text-slate-500'}
+                                                        ${isCurrent ? 'bg-blue-900/40 text-blue-200 border-blue-500' : 
+                                                          isAttacked ? 'bg-red-900/60 text-red-200 border-red-500 animate-pulse shadow-[inset_0_0_10px_rgba(239,68,68,0.5)]' : 
+                                                          'bg-slate-900/40 text-slate-500'}
                                                     `} 
                                                     style={{ gridColumn: x + 1, gridRow: y + 1 }}
                                                     onClick={() => {

@@ -68,6 +68,7 @@ export interface IStarTrekGame {
     getLRSData(): number[][] | null;
     getGalaxyMap(): number[][];
     getRegionName(x: number, y: number): string;
+    getActiveStarbaseAttack(): { quadX: number, quadY: number, deadline: number } | null;
     
     // Commands
     executeNav(course: number, warp: number, suppressLogs?: boolean): void;

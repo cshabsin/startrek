@@ -459,6 +459,10 @@ export class StarTrekGame implements IStarTrekGame {
     return this.knownGalaxy.map(col => [...col]);
   }
 
+  public getActiveStarbaseAttack() {
+      return null;
+  }
+
     public executeRest(days: number) {
       if (days <= 0) return;
       
