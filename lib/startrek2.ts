@@ -67,7 +67,8 @@ export class StarTrekGameV2 implements IStarTrekGame {
   private rank: number = 5; // Default rank
   private starbaseAttack: { active: boolean, quadX: number, quadY: number, deadline: number } | null = null;
 
-  constructor() {
+  constructor(config?: { rank?: number }) {
+    if (config?.rank) this.rank = config.rank;
     this.init();
   }
 

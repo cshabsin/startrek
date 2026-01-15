@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import GameTerminal from '@/components/GameTerminal';
 import ModernInterface from '@/components/ModernInterface';
 import CreditsOverlay from '@/components/CreditsOverlay';
+import GameSetupOverlay from '@/components/GameSetupOverlay';
 import { StarTrekGame } from '@/lib/startrek';
 import { StarTrekGameV2 } from '@/lib/startrek2';
 import { IStarTrekGame } from '@/lib/game-interface';
@@ -23,7 +24,6 @@ export default function Home() {
     if (hash === '#apple') return 'APPLE_II';
     return 'TERMINAL';
   });
-  const [engine, setEngine] = useState<'v1' | 'v2'>('v1');
   const [game, setGame] = useState<IStarTrekGame | null>(null);
   const [showCredits, setShowCredits] = useState(false);
 
@@ -43,14 +43,6 @@ export default function Home() {
     }
   }, [mode, theme]);
 
-  useEffect(() => {
-      const timer = setTimeout(() => {
-          if (engine === 'v1') setGame(new StarTrekGame());
-          else setGame(new StarTrekGameV2());
-      }, 0);
-      return () => clearTimeout(timer);
-  }, [engine]);
-
   return (
     <main className="min-h-screen bg-black relative">
       <div className="absolute top-2 right-2 z-50 flex gap-2 items-center">
@@ -67,14 +59,6 @@ export default function Home() {
             ))}
           </select>
         )}
-        <select
-            value={engine}
-            onChange={(e) => setEngine(e.target.value as 'v1' | 'v2')}
-            className="px-2 py-1 rounded text-sm font-bold border bg-black text-blue-400 border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-            <option value="v1">SST (1978)</option>
-            <option value="v2">SST II (Advanced)</option>
-        </select>
         <button 
             onClick={() => setMode('classic')}
             className={`px-3 py-1 rounded text-sm font-bold border ${mode === 'classic' ? 'bg-green-700 text-black border-green-500' : 'bg-black text-green-700 border-green-700'}`}
@@ -94,6 +78,13 @@ export default function Home() {
             CREDITS
         </button>
       </div>
+
+      {!game && (
+          <GameSetupOverlay onStart={(config) => {
+              if (config.type === 'v1') setGame(new StarTrekGame());
+              else setGame(new StarTrekGameV2({ rank: config.rank }));
+          }} />
+      )}
 
       {mode === 'classic' && game ? (
           <GameTerminal gameInstance={game} theme={theme} />
