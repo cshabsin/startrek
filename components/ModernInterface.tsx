@@ -276,6 +276,16 @@ export default function ModernInterface({ game }: ModernInterfaceProps) {
     };
 
     const renderGrid = () => {
+        const srsIndex = 1; // Short Range Sensors
+        if (damageReport[srsIndex] && damageReport[srsIndex].value < 0) {
+            return (
+                <div className="col-span-8 row-span-8 flex flex-col items-center justify-center text-red-500 animate-pulse">
+                    <div className="text-4xl font-black mb-2">OFFLINE</div>
+                    <div className="text-sm font-mono tracking-widest border-t border-red-900/50 pt-2">SHORT RANGE SENSORS DAMAGED</div>
+                </div>
+            );
+        }
+
         const grid = [];
         const entities = viewState;
         for (let y = 0; y < 8; y++) {
