@@ -667,12 +667,16 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                         if (course >= 9) course -= 8;
                                                         
                                                         // Calculate Warp (Distance in Quadrants)
-                                                        let dist = Math.sqrt(dx*dx + dy*dy);
+                                                        // Calculate precise sector distance to minimize rounding errors
+                                                        const exactDistQuadrants = Math.sqrt(dx*dx + dy*dy);
+                                                        const exactDistSectors = Math.round(exactDistQuadrants * 8);
+                                                        let dist = exactDistSectors / 8;
+
                                                         // Clamp to max engine speed
                                                         if (dist > maxWarp) dist = maxWarp;
                                                         
-                                                        // Round to 1 decimal
-                                                        dist = Math.round(dist * 10) / 10;
+                                                        // Use 3 decimal places for precision in command
+                                                        dist = Math.round(dist * 1000) / 1000;
                                                         
                                                         if (confirm(`Warp to Quadrant ${x+1},${y+1}?
 Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
