@@ -654,7 +654,12 @@ export class StarTrekGameV2 implements IStarTrekGame {
                  this.print("*** KLINGON DESTROYED ***");
                  this.localKlingons.splice(i, 1);
                  this.totalKlingons--;
-                 this.galaxy[this.quadX][this.quadY] -= 100;
+                 
+                 // Defensive update of galaxy map
+                 if (this.galaxy[this.quadX][this.quadY] >= 100) {
+                     this.galaxy[this.quadX][this.quadY] -= 100;
+                 }
+                 
                  if (this.totalKlingons <= 0) {
                      this.winGame();
                      return targets;
@@ -738,7 +743,12 @@ export class StarTrekGameV2 implements IStarTrekGame {
                 this.print("*** KLINGON DESTROYED ***");
                 this.localKlingons.splice(kIdx, 1);
                 this.totalKlingons--;
-                this.galaxy[this.quadX][this.quadY] -= 100;
+                
+                // Defensive update
+                if (this.galaxy[this.quadX][this.quadY] >= 100) {
+                    this.galaxy[this.quadX][this.quadY] -= 100;
+                }
+                
                 if (this.totalKlingons <= 0) this.winGame();
                 break;
             }
@@ -1085,12 +1095,18 @@ export class StarTrekGameV2 implements IStarTrekGame {
               const qy = this.starbaseAttack.quadY;
               
               // Deduct starbase from galaxy map
-              this.galaxy[qx][qy] -= 10;
-              this.totalStarbases--;
-              
-              // Update known galaxy if we know about it
-              if (this.knownGalaxy[qx][qy] !== 0) {
-                  this.knownGalaxy[qx][qy] -= 10;
+              // Defensive check to avoid double-destruction (e.g. if player destroyed it or previous logic failed)
+              const currentVal = this.galaxy[qx][qy];
+              if (Math.floor((currentVal % 100) / 10) > 0) {
+                  this.galaxy[qx][qy] -= 10;
+                  this.totalStarbases--;
+                  
+                  // Update known galaxy if we know about it
+                  if (this.knownGalaxy[qx][qy] !== 0) {
+                      this.knownGalaxy[qx][qy] -= 10;
+                  }
+              } else {
+                  this.print("SENSORS INDICATE STARBASE WAS ALREADY DESTROYED.");
               }
               
               if (this.totalStarbases === 0) {

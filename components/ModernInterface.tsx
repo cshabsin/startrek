@@ -5,9 +5,10 @@ import { IStarTrekGame, Line } from '../lib/game-interface';
 
 interface ModernInterfaceProps {
     game: IStarTrekGame;
+    onReset?: () => void;
 }
 
-export default function ModernInterface({ game }: ModernInterfaceProps) {
+export default function ModernInterface({ game, onReset }: ModernInterfaceProps) {
     const [, setTick] = useState(0);
     const [logs, setLogs] = useState<Line[]>([]);
     
@@ -739,8 +740,12 @@ Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
                                 </div>
                                 <button 
                                     onClick={() => {
-                                        game.init();
-                                        refresh();
+                                        if (onReset) {
+                                            onReset();
+                                        } else {
+                                            game.init();
+                                            refresh();
+                                        }
                                     }}
                                     className="bg-white text-red-900 px-8 py-4 rounded font-black text-xl hover:bg-red-100 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.5)]"
                                 >

@@ -89,7 +89,7 @@ export default function Home() {
       {mode === 'classic' && game ? (
           <GameTerminal gameInstance={game} theme={theme} />
       ) : (
-          game && <ModernInterface game={game} />
+          game && <ModernInterface game={game} onReset={() => setGame(null)} />
       )}
 
       {showCredits && <CreditsOverlay onClose={() => setShowCredits(false)} />}
