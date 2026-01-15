@@ -61,6 +61,10 @@ export default function CreditsOverlay({ onClose }: CreditsOverlayProps) {
                              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Changelog</h3>
                              <div className="space-y-4 text-sm font-mono text-slate-400 border-l-2 border-slate-800 pl-4">
                                  <div>
+                                     <div className="text-blue-400 font-bold mb-1">Super Star Trek II Update (2026-01-14)</div>
+                                     <p>Introduced Advanced Mode simulation logic. Starbases now come under attack by Klingons, requiring rapid response missions. Added action time costs for combat, rank-based difficulty levels, and Red Alert visual notifications. Tactical interface now reacts to sensor damage by disabling the grid view.</p>
+                                 </div>
+                                 <div>
                                      <div className="text-blue-400 font-bold mb-1">UI Enhancements & Fixes (2026-01-13)</div>
                                      <p>Improved navigation interface with a clickable compass rose and a warp factor tooltip clarifying distance calculations (Warp 1 = 8 Sectors). Added phaser beam visualization. Fixed floating-point precision issues in stardate displays and ensured navigation mode correctly exits when the game ends or when switching modes.</p>
                                  </div>
