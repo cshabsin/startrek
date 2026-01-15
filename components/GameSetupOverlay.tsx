@@ -13,12 +13,13 @@ const RANKS = [
 
 export default function GameSetupOverlay({ onStart }: GameSetupProps) {
     const [type, setType] = useState<'v1' | 'v2'>('v1');
-    const [rank, setRank] = useState(5); // Default Commander
+    const [rank, setRank] = useState(7); // Default Commander
 
     // Map rank 1-12 to labels (simplified)
     const getRankLabel = (r: number) => {
-        if (r <= 3) return "Novice";
-        if (r <= 6) return "Lieutenant";
+        if (r <= 2) return "Ensign";
+        if (r <= 4) return "Lieutenant";
+        if (r <= 6) return "Lt. Commander";
         if (r <= 8) return "Commander";
         if (r <= 10) return "Captain";
         return "Admiral";
