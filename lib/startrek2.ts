@@ -1029,7 +1029,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
           this.print(`${hit} UNIT HIT ON ENTERPRISE FROM SECTOR ${k.x+1},${k.y+1}`);
           if (this.shields < 0) {
                this.print("      <SHIELDS DOWN TO 0 UNITS>"); // Or negative
-               this.gameOver(true);
+               this.gameOver('destroyed');
                break;
           } else {
               this.print(`      <SHIELDS DOWN TO ${Math.floor(this.shields)} UNITS>`);
@@ -1059,11 +1059,13 @@ export class StarTrekGameV2 implements IStarTrekGame {
       }
   }
 
-  private gameOver(destroyed: boolean = true) {
+  private gameOver(reason: 'destroyed' | 'timeout' | 'starbases_lost' = 'destroyed') {
       this.print("");
       this.print("IT IS STARDATE " + this.stardate.toFixed(1));
-      if (destroyed) {
+      if (reason === 'destroyed') {
           this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
+      } else if (reason === 'starbases_lost') {
+          this.print("THE FEDERATION HAS LOST ALL STARBASES. THE EMPIRE CANNOT SURVIVE.");
       } else {
           this.print("THE FEDERATION WILL BE CONQUERED.");
       }
@@ -1086,7 +1088,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
       if (this.state === 'ENDED') return;
       this.stardate += time;
       if (this.stardate > this.stardateEnd) {
-          this.gameOver(false);
+          this.gameOver('timeout');
           return;
       }
       this.checkForStarbaseAttack();
@@ -1118,9 +1120,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
               }
               
               if (this.totalStarbases === 0) {
-                  this.print("THE FEDERATION HAS LOST ALL STARBASES.");
-                  this.print("THE EMPIRE CANNOT SURVIVE.");
-                  this.gameOver(true);
+                  this.gameOver('starbases_lost');
               }
           } else {
               this.print(`${(this.starbaseAttack.deadline - this.stardate).toFixed(1)} STARDATES LEFT TO SAVE STARBASE.`);

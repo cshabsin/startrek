@@ -468,7 +468,7 @@ export class StarTrekGame implements IStarTrekGame {
       
       this.stardate += days;
       if (this.stardate > this.stardateEnd) {
-          this.gameOver(false);
+          this.gameOver('timeout');
           return;
       }
       
@@ -547,7 +547,7 @@ export class StarTrekGame implements IStarTrekGame {
         const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
         this.stardate += timeSpent;
         if (this.stardate > this.stardateEnd) {
-            this.gameOver(false);
+            this.gameOver('timeout');
             return;
         }
 
@@ -1046,7 +1046,7 @@ export class StarTrekGame implements IStarTrekGame {
           this.print(`${hit} UNIT HIT ON ENTERPRISE FROM SECTOR ${k.x+1},${k.y+1}`);
           if (this.shields < 0) {
                this.print("      <SHIELDS DOWN TO 0 UNITS>"); // Or negative
-               this.gameOver(true);
+               this.gameOver('destroyed');
                break;
           } else {
               this.print(`      <SHIELDS DOWN TO ${Math.floor(this.shields)} UNITS>`);
@@ -1078,11 +1078,13 @@ export class StarTrekGame implements IStarTrekGame {
       }
   }
 
-  private gameOver(destroyed: boolean = true) {
+  private gameOver(reason: 'destroyed' | 'timeout' | 'starbases_lost' = 'destroyed') {
       this.print("");
       this.print("IT IS STARDATE " + this.stardate.toFixed(1));
-      if (destroyed) {
+      if (reason === 'destroyed') {
           this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
+      } else if (reason === 'starbases_lost') {
+          this.print("THE FEDERATION HAS LOST ALL STARBASES. THE EMPIRE CANNOT SURVIVE.");
       } else {
           this.print("THE FEDERATION WILL BE CONQUERED.");
       }
