@@ -536,15 +536,17 @@ export class StarTrekGameV2 implements IStarTrekGame {
         this.advanceTime(timeSpent);
         if (this.state === 'ENDED') return;
 
-        let globalX = this.quadX * 8 + this.sectX;
-        let globalY = this.quadY * 8 + this.sectY;
+        const startGX = this.quadX * 8 + this.sectX;
+        const startGY = this.quadY * 8 + this.sectY;
+        let globalX = startGX;
+        let globalY = startGY;
         
         let lastSectX = this.sectX;
         let lastSectY = this.sectY;
 
-        for (let i = 0; i < numSectors; i++) {
-            globalX += dx;
-            globalY += dy;
+        for (let i = 1; i <= numSectors; i++) {
+            globalX = startGX + i * dx;
+            globalY = startGY + i * dy;
             
             const currentQX = Math.floor(globalX / 8);
             const currentQY = Math.floor(globalY / 8);

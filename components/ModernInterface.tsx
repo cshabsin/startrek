@@ -2,33 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IStarTrekGame, Line } from '../lib/game-interface';
-
-// Helper to calculate course for BASIC linear interpolation navigation
-const calculateBasicCourse = (dx: number, dy: number): number => {
-    if (dx === 0 && dy === 0) return 1;
-    const adx = Math.abs(dx);
-    const ady = Math.abs(dy);
-    
-    if (adx >= ady) {
-        // Major axis X
-        if (dx > 0) {
-            // East-ish (1)
-            return (dy <= 0) ? 1 - dy/dx : 9 - dy/dx;
-        } else {
-            // West-ish (5)
-            return 5 - dy/dx;
-        }
-    } else {
-        // Major axis Y
-        if (dy < 0) {
-            // North-ish (3)
-            return 3 + dx/dy;
-        } else {
-            // South-ish (7)
-            return 7 + dx/dy;
-        }
-    }
-};
+import { calculateBasicCourse, calculateWarp } from '../lib/navigation-utils';
 
 interface ModernInterfaceProps {
     game: IStarTrekGame;
@@ -340,34 +314,22 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                         // Calculate Course using BASIC logic
                         const course = calculateBasicCourse(dx, dy);
                         
-                        // Calculate Auto-Warp (Chebyshev distance in sectors / 8)
-                        const distSectors = Math.max(Math.abs(dx), Math.abs(dy));
-                        let autoWarp = distSectors / 8;
+                        // Calculate Auto-Warp
+                        let autoWarp = calculateWarp(dx, dy);
                         
                         // Clamp and Round
                         autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
                         
                         // Set State (Do not execute yet)
-                        setTargetCourse(parseFloat(course.toFixed(2)));
+                        setTargetCourse(parseFloat(course.toFixed(4)));
                         setWarpFactor(autoWarp);
                     }
                     if (fireMode === 'TOR') {
-                         // For Torpedoes, angle is Euclidean? 
-                         // No, original game uses same course system.
-                         // But torpedo logic in original game (line 1860) uses COS/SIN.
-                         // "A1=... B1=... A2=INT(A1+W1*COS...)"
-                         // So Torpedo uses Euclidean trajectory.
-                         // So for Torpedo, standard atan2 is actually better?
-                         // "INCORRECT COURSE DATA" check 1890 uses FNB1/FNA1 which use COS/SIN.
-                         // So Torpedoes move Euclideanly.
-                         // But for consistency with Nav, maybe use BASIC course?
-                         // User report was about NAVIGATION.
-                         // Let's keep Torpedo as Euclidean atan2 for now unless reported otherwise.
                          const angle = Math.atan2(dy, dx);
                          let course = 1 - angle / (Math.PI / 4);
                          if (course < 1) course += 8;
                          if (course >= 9) course -= 8;
-                         setTargetCourse(parseFloat(course.toFixed(2)));
+                         setTargetCourse(parseFloat(course.toFixed(4)));
                     }
                 };
                 
@@ -687,14 +649,14 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                     onClick={() => {
                                                         if (isCurrent) return; 
                                                         
-                                                        const dx = x - game.quadX;
-                                                        const dy = y - game.quadY;
+                                                        const dxSectors = (x - game.quadX) * 8;
+                                                        const dySectors = (y - game.quadY) * 8;
                                                         
                                                         // Calculate course using BASIC logic
-                                                        const course = calculateBasicCourse(dx, dy);
+                                                        const course = calculateBasicCourse(dxSectors, dySectors);
                                                         
-                                                        // Calculate Warp (Chebyshev distance in Quadrants)
-                                                        let dist = Math.max(Math.abs(dx), Math.abs(dy));
+                                                        // Calculate Warp
+                                                        let dist = calculateWarp(dxSectors, dySectors);
                                                         
                                                         // Clamp to max engine speed
                                                         if (dist > maxWarp) dist = maxWarp;
