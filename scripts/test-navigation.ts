@@ -83,3 +83,17 @@ runTest('Perimeter Clamp West', [0,0], [0,0], [-1,0], [0,0]);
 // Start at 4,4, target 2,1
 runTest('West-North-West 2,3', [4,4], [0,0], [2,1], [2,1]);
 
+// --- Galaxy Map Scenarios ---
+
+// 8. Corner to Corner (0,0 -> 7,7)
+// Should move from top-left of galaxy to bottom-right, preserving sector 0,0
+runTest('Galaxy Map: Corner to Corner', [0,0], [0,0], [7,7], [7,7]);
+
+// 9. Far East with Offset (0,0 -> 7,0)
+// Start at Sector 4,4. Should land at Sector 4,4 in Quadrant 7,0.
+runTest('Galaxy Map: Far East (Sector Preservation)', [0,0], [4,4], [7,0], [7,0]);
+
+// 10. Knight's Move (0,0 -> 1,2)
+// Start Sector 2,2. Target Q1,2.
+runTest('Galaxy Map: Knight Move', [0,0], [2,2], [1,2], [1,2]);
+
