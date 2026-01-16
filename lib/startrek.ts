@@ -468,7 +468,7 @@ export class StarTrekGame implements IStarTrekGame {
       
       this.stardate += days;
       if (this.stardate > this.stardateEnd) {
-          this.gameOver();
+          this.gameOver(false);
           return;
       }
       
@@ -547,7 +547,7 @@ export class StarTrekGame implements IStarTrekGame {
         const timeSpent = warp < 1 ? 0.1 * Math.floor(10 * warp) : 1;
         this.stardate += timeSpent;
         if (this.stardate > this.stardateEnd) {
-            this.gameOver();
+            this.gameOver(false);
             return;
         }
 
@@ -1044,7 +1044,7 @@ export class StarTrekGame implements IStarTrekGame {
           this.print(`${hit} UNIT HIT ON ENTERPRISE FROM SECTOR ${k.x+1},${k.y+1}`);
           if (this.shields < 0) {
                this.print("      <SHIELDS DOWN TO 0 UNITS>"); // Or negative
-               this.gameOver();
+               this.gameOver(true);
                break;
           } else {
               this.print(`      <SHIELDS DOWN TO ${Math.floor(this.shields)} UNITS>`);
@@ -1076,11 +1076,16 @@ export class StarTrekGame implements IStarTrekGame {
       }
   }
 
-  private gameOver() {
+  private gameOver(destroyed: boolean = true) {
       this.print("");
       this.print("IT IS STARDATE " + this.stardate.toFixed(1));
-      this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
-      this.print(`THERE WERE ${this.totalKlingons} KLINGON BATTLE CRUISERS LEFT.`);
+      if (destroyed) {
+          this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
+      } else {
+          this.print("THE FEDERATION WILL BE CONQUERED.");
+      }
+      this.print(`THERE WERE ${this.totalKlingons} KLINGON BATTLE CRUISERS LEFT AT`);
+      this.print("THE END OF YOUR MISSION.");
       this.state = 'ENDED';
   }
 

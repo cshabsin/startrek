@@ -1027,7 +1027,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
           this.print(`${hit} UNIT HIT ON ENTERPRISE FROM SECTOR ${k.x+1},${k.y+1}`);
           if (this.shields < 0) {
                this.print("      <SHIELDS DOWN TO 0 UNITS>"); // Or negative
-               this.gameOver();
+               this.gameOver(true);
                break;
           } else {
               this.print(`      <SHIELDS DOWN TO ${Math.floor(this.shields)} UNITS>`);
@@ -1057,11 +1057,16 @@ export class StarTrekGameV2 implements IStarTrekGame {
       }
   }
 
-  private gameOver() {
+  private gameOver(destroyed: boolean = true) {
       this.print("");
       this.print("IT IS STARDATE " + this.stardate.toFixed(1));
-      this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
-      this.print(`THERE WERE ${this.totalKlingons} KLINGON BATTLE CRUISERS LEFT.`);
+      if (destroyed) {
+          this.print("THE ENTERPRISE HAS BEEN DESTROYED. THE FEDERATION WILL BE CONQUERED.");
+      } else {
+          this.print("THE FEDERATION WILL BE CONQUERED.");
+      }
+      this.print(`THERE WERE ${this.totalKlingons} KLINGON BATTLE CRUISERS LEFT AT`);
+      this.print("THE END OF YOUR MISSION.");
       this.state = 'ENDED';
   }
 
@@ -1079,7 +1084,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
       if (this.state === 'ENDED') return;
       this.stardate += time;
       if (this.stardate > this.stardateEnd) {
-          this.gameOver();
+          this.gameOver(false);
           return;
       }
       this.checkForStarbaseAttack();
@@ -1113,7 +1118,7 @@ export class StarTrekGameV2 implements IStarTrekGame {
               if (this.totalStarbases === 0) {
                   this.print("THE FEDERATION HAS LOST ALL STARBASES.");
                   this.print("THE EMPIRE CANNOT SURVIVE.");
-                  this.gameOver();
+                  this.gameOver(true);
               }
           } else {
               this.print(`${(this.starbaseAttack.deadline - this.stardate).toFixed(1)} STARDATES LEFT TO SAVE STARBASE.`);
