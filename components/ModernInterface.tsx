@@ -657,8 +657,14 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                     onClick={() => {
                                                         if (isCurrent) return; 
                                                         
-                                                        const dx = x - game.quadX;
-                                                        const dy = y - game.quadY;
+                                                        // Calculate Global Coordinates for precision
+                                                        const startGX = game.quadX * 8 + game.sectX;
+                                                        const startGY = game.quadY * 8 + game.sectY;
+                                                        const targetGX = x * 8 + 3.5; // Aim for center of target quadrant
+                                                        const targetGY = y * 8 + 3.5;
+                                                        
+                                                        const dx = targetGX - startGX;
+                                                        const dy = targetGY - startGY;
                                                         
                                                         // Calculate course
                                                         const angle = Math.atan2(dy, dx);
@@ -667,11 +673,10 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                         if (course >= 9) course -= 8;
                                                         
                                                         // Calculate Warp (Distance in Quadrants)
-                                                        // Calculate precise sector distance to minimize rounding errors
-                                                        const exactDistQuadrants = Math.sqrt(dx*dx + dy*dy);
-                                                        const exactDistSectors = Math.round(exactDistQuadrants * 8);
-                                                        let dist = exactDistSectors / 8;
-
+                                                        // Distance in sectors / 8 = Distance in Quadrants (Warp)
+                                                        const distSectors = Math.sqrt(dx*dx + dy*dy);
+                                                        let dist = distSectors / 8;
+                                                        
                                                         // Clamp to max engine speed
                                                         if (dist > maxWarp) dist = maxWarp;
                                                         
@@ -679,7 +684,7 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                         dist = Math.round(dist * 1000) / 1000;
                                                         
                                                         if (confirm(`Warp to Quadrant ${x+1},${y+1}?
-Course: ${course.toFixed(1)}, Warp: ${dist}`)) {
+Course: ${course.toFixed(2)}, Warp: ${dist}`)) {
                                                             setOverlay(null);
                                                             handleNav(course, dist);
                                                         }
