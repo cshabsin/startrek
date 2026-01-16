@@ -571,8 +571,8 @@ export class StarTrekGameV2 implements IStarTrekGame {
             }
         }
         
-        const finalQX = Math.floor(globalX / 8);
-        const finalQY = Math.floor(globalY / 8);
+        let finalQX = Math.floor(globalX / 8);
+        let finalQY = Math.floor(globalY / 8);
         const finalSX = Math.floor(globalX % 8);
         const finalSY = Math.floor(globalY % 8);
         
@@ -584,22 +584,23 @@ export class StarTrekGameV2 implements IStarTrekGame {
              globalX = Math.max(0, Math.min(63.9, globalX));
              globalY = Math.max(0, Math.min(63.9, globalY));
              
-             this.quadX = Math.floor(globalX / 8);
-             this.quadY = Math.floor(globalY / 8);
+             finalQX = Math.floor(globalX / 8);
+             finalQY = Math.floor(globalY / 8);
              this.sectX = Math.floor(globalX % 8);
              this.sectY = Math.floor(globalY % 8);
         } else {
-             const changedQuad = (finalQX !== this.quadX || finalQY !== this.quadY);
-             this.quadX = finalQX;
-             this.quadY = finalQY;
              this.sectX = Math.floor(finalSX);
              this.sectY = Math.floor(finalSY);
-             
-             if (changedQuad) {
-                 this.enterQuadrant(suppressLogs);
-             } else {
-                 this.printShortRangeScan(suppressLogs);
-             }
+        }
+
+        const changedQuad = (finalQX !== this.quadX || finalQY !== this.quadY);
+        this.quadX = finalQX;
+        this.quadY = finalQY;
+        
+        if (changedQuad) {
+            this.enterQuadrant(suppressLogs);
+        } else {
+            this.printShortRangeScan(suppressLogs);
         }
   }
 
