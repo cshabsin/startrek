@@ -3,6 +3,33 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IStarTrekGame, Line } from '../lib/game-interface';
 
+// Helper to calculate course for BASIC linear interpolation navigation
+const calculateBasicCourse = (dx: number, dy: number): number => {
+    if (dx === 0 && dy === 0) return 1;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+    
+    if (adx >= ady) {
+        // Major axis X
+        if (dx > 0) {
+            // East-ish (1)
+            return (dy <= 0) ? 1 - dy/dx : 9 - dy/dx;
+        } else {
+            // West-ish (5)
+            return 5 - dy/dx;
+        }
+    } else {
+        // Major axis Y
+        if (dy < 0) {
+            // North-ish (3)
+            return 3 + dx/dy;
+        } else {
+            // South-ish (7)
+            return 7 + dx/dy;
+        }
+    }
+};
+
 interface ModernInterfaceProps {
     game: IStarTrekGame;
     onReset?: () => void;
@@ -310,20 +337,12 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                     if (dx === 0 && dy === 0) return; // Ignore clicks on self
                     
                     if (navMode) {
-                        // Calculate Course
-                        const angle = Math.atan2(dy, dx);
-                        let course = 1 - angle / (Math.PI / 4);
-                        if (course < 1) course += 8;
-                        if (course >= 9) course -= 8;
+                        // Calculate Course using BASIC logic
+                        const course = calculateBasicCourse(dx, dy);
                         
-                        // Calculate Auto-Warp
-                        // BASIC algo moves in Chebyshev distance (max(dx, dy)) due to non-normalized vectors
+                        // Calculate Auto-Warp (Chebyshev distance in sectors / 8)
                         const distSectors = Math.max(Math.abs(dx), Math.abs(dy));
-                        
-                        // Use a lookup for "clean" warp factors that cover the distance
-                        // Valid range for N sectors: [(N-0.5)/8, (N+0.5)/8)
-                        const warpLookup = [0, 0.10, 0.20, 0.35, 0.50, 0.60, 0.75, 0.90, 1.0];
-                        let autoWarp = distSectors <= 8 ? warpLookup[distSectors] : 1.0;
+                        let autoWarp = distSectors / 8;
                         
                         // Clamp and Round
                         autoWarp = Math.max(0.05, Math.min(maxWarp, autoWarp));
@@ -333,6 +352,17 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                         setWarpFactor(autoWarp);
                     }
                     if (fireMode === 'TOR') {
+                         // For Torpedoes, angle is Euclidean? 
+                         // No, original game uses same course system.
+                         // But torpedo logic in original game (line 1860) uses COS/SIN.
+                         // "A1=... B1=... A2=INT(A1+W1*COS...)"
+                         // So Torpedo uses Euclidean trajectory.
+                         // So for Torpedo, standard atan2 is actually better?
+                         // "INCORRECT COURSE DATA" check 1890 uses FNB1/FNA1 which use COS/SIN.
+                         // So Torpedoes move Euclideanly.
+                         // But for consistency with Nav, maybe use BASIC course?
+                         // User report was about NAVIGATION.
+                         // Let's keep Torpedo as Euclidean atan2 for now unless reported otherwise.
                          const angle = Math.atan2(dy, dx);
                          let course = 1 - angle / (Math.PI / 4);
                          if (course < 1) course += 8;
@@ -657,31 +687,17 @@ export default function ModernInterface({ game, onReset }: ModernInterfaceProps)
                                                     onClick={() => {
                                                         if (isCurrent) return; 
                                                         
-                                                        // Calculate Global Coordinates for precision
-                                                        const startGX = game.quadX * 8 + game.sectX;
-                                                        const startGY = game.quadY * 8 + game.sectY;
-                                                        const targetGX = x * 8 + 3.5; // Aim for center of target quadrant
-                                                        const targetGY = y * 8 + 3.5;
+                                                        const dx = x - game.quadX;
+                                                        const dy = y - game.quadY;
                                                         
-                                                        const dx = targetGX - startGX;
-                                                        const dy = targetGY - startGY;
+                                                        // Calculate course using BASIC logic
+                                                        const course = calculateBasicCourse(dx, dy);
                                                         
-                                                        // Calculate course
-                                                        const angle = Math.atan2(dy, dx);
-                                                        let course = 1 - angle / (Math.PI / 4);
-                                                        if (course < 1) course += 8;
-                                                        if (course >= 9) course -= 8;
-                                                        
-                                                        // Calculate Warp (Distance in Quadrants)
-                                                        // Distance in sectors / 8 = Distance in Quadrants (Warp)
-                                                        const distSectors = Math.sqrt(dx*dx + dy*dy);
-                                                        let dist = distSectors / 8;
+                                                        // Calculate Warp (Chebyshev distance in Quadrants)
+                                                        let dist = Math.max(Math.abs(dx), Math.abs(dy));
                                                         
                                                         // Clamp to max engine speed
                                                         if (dist > maxWarp) dist = maxWarp;
-                                                        
-                                                        // Use 3 decimal places for precision in command
-                                                        dist = Math.round(dist * 1000) / 1000;
                                                         
                                                         if (confirm(`Warp to Quadrant ${x+1},${y+1}?
 Course: ${course.toFixed(2)}, Warp: ${dist}`)) {
