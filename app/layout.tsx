@@ -28,6 +28,9 @@ const pressStart2P = Press_Start_2P({
 export const metadata: Metadata = {
   title: "Super Star Trek",
   description: "A Next.js implementation of the classic Super Star Trek BASIC game",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -41,8 +44,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${vt323.variable} ${pressStart2P.variable} antialiased`}
       >
         {children}
+        <GoogleAnalytics gaId="G-FZ09TVK2XZ" />
       </body>
-      <GoogleAnalytics gaId="G-FZ09TVK2XZ" />
     </html>
   );
 }
