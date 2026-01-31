@@ -1097,6 +1097,12 @@ export class StarTrekGameV2 implements IStarTrekGame {
   private checkForStarbaseAttack() {
       // Check if existing attack is too late
       if (this.starbaseAttack && this.starbaseAttack.active) {
+          if (this.quadX === this.starbaseAttack.quadX && this.quadY === this.starbaseAttack.quadY) {
+              this.print("YOU ARE AT THE STARBASE. DEFENSE PROTOCOLS ENGAGED.");
+              this.starbaseAttack.active = false;
+              return;
+          }
+
           if (this.stardate > this.starbaseAttack.deadline) {
               this.print("TOO LATE! STARBASE DESTROYED.");
               this.starbaseAttack.active = false;
@@ -1143,6 +1149,9 @@ export class StarTrekGameV2 implements IStarTrekGame {
       const bases = [];
       for (let x = 0; x < 8; x++) {
           for (let y = 0; y < 8; y++) {
+              // Exclude current quadrant to prevent immediate attack alerts
+              if (x === this.quadX && y === this.quadY) continue;
+
               if (Math.floor((this.galaxy[x][y] % 100) / 10) > 0) {
                   bases.push({ x, y });
               }
