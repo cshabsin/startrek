@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   title: "Super Star Trek",
   description: "A Next.js implementation of the classic Super Star Trek BASIC game",
   icons: {
-    icon: '/favicon.ico',
+    icon: 'favicon.ico',
   },
 };
 
